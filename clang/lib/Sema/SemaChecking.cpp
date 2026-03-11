@@ -5196,7 +5196,7 @@ ExprResult Sema::BuildAtomicExpr(SourceRange CallRange, SourceRange ExprRange,
       // Ensure that it is an integer.
       Diag(Scope->getBeginLoc(), diag::err_atomic_op_has_invalid_sync_scope)
           << Scope->getSourceRange();
-    } else if (BuiltinInfo && BuiltinInfo->Langs == ALL_LANGUAGES) {
+    } else if (IsScoped) {
       // In the case of language-agnostic builtins, also check if it uses the
       // builtin enum type "__memory_scope".
       CheckScopedAtomicScopeArgument(*this, Scope);
