@@ -19,6 +19,7 @@
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineOperand.h"
+#include "llvm/Support/ErrorHandling.h"
 
 #define DEBUG_TYPE "si-fold-operands"
 using namespace llvm;
@@ -1237,6 +1238,20 @@ void SIFoldOperandsImpl::foldOperand(
     }
 
     return;
+  }
+
+  // If a constant is folded into src2 of a V_DOT2ACC pseudo, convert it to
+  // VOP3 V_DOT2_F32_F16/BF16. Folding the constant (ruling out VOPD) is
+  // preferable to leaving it unfolded to enable a potential VOPD pairing.
+  if (OpToFold.isImm() && UseOpIdx == 6) {
+    unsigned Opc = UseMI->getOpcode();
+    if (Opc == AMDGPU::V_DOT2ACC_F32_F16_PSEUDO ||
+        Opc == AMDGPU::V_DOT2ACC_F32_BF16_PSEUDO) {
+      UseMI->setDesc(TII->get(Opc == AMDGPU::V_DOT2ACC_F32_F16_PSEUDO
+                                  ? AMDGPU::V_DOT2_F32_F16
+                                  : AMDGPU::V_DOT2_F32_BF16));
+      UseMI->untieRegOperand(UseOpIdx);
+    }
   }
 
   if (tryToFoldACImm(OpToFold, UseMI, UseOpIdx, FoldList))

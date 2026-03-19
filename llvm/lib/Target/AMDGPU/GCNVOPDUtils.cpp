@@ -34,6 +34,23 @@ using namespace llvm;
 
 #define DEBUG_TYPE "gcn-vopd-utils"
 
+// Check if MI is a VOP3 instruction with operands that satisfy the constraints
+// for mapping it to a VOP2/VOPD opcode: no modifiers, no clamp, src1 and src2
+// are registers (src0 can be register or literal), and src2 is same as dst.
+static bool canMapVOP3ToVOPD(const MachineInstr &MI) {
+  unsigned Opc = MI.getOpcode();
+  if (Opc != AMDGPU::V_DOT2_F32_F16 && Opc != AMDGPU::V_DOT2_F32_BF16)
+    return false;
+  // src0 can be register or literal
+  return MI.getOperand(1).getImm() == SISrcMods::OP_SEL_1 && // default src0mods
+         MI.getOperand(3).getImm() == SISrcMods::OP_SEL_1 && // default src1mods
+         MI.getOperand(4).isReg() &&                         // register src1
+         MI.getOperand(5).getImm() == SISrcMods::OP_SEL_1 && // default src2mods
+         MI.getOperand(6).isReg() &&                         // register src2
+         MI.getOperand(7).getImm() == 0 &&                   // no clamp
+         MI.getOperand(0).getReg() == MI.getOperand(6).getReg(); // dst == src2
+}
+
 bool llvm::checkVOPDRegConstraints(const SIInstrInfo &TII,
                                    const MachineInstr &MIX,
                                    const MachineInstr &MIY, bool IsVOPD3) {
@@ -44,7 +61,8 @@ bool llvm::checkVOPDRegConstraints(const SIInstrInfo &TII,
 
   if (IsVOPD3 && !ST.hasVOPD3())
     return false;
-  if (!IsVOPD3 && (TII.isVOP3(MIX) || TII.isVOP3(MIY)))
+  if (!IsVOPD3 && ((TII.isVOP3(MIX) && !canMapVOP3ToVOPD(MIX)) ||
+                   (TII.isVOP3(MIY) && !canMapVOP3ToVOPD(MIY))))
     return false;
   if (TII.isDPP(MIX) || TII.isDPP(MIY))
     return false;
