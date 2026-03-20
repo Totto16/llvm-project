@@ -2112,6 +2112,18 @@ static void CheckScopedAtomicScopeArgument(Sema &S, Expr *Scope) {
   if (const auto *EnumTy = OrigScope->getType()->getAs<EnumType>()) {
     if (EnumTy->getDecl()->getName() == "__memory_scope") {
       return;
+
+  // In C, enumerators have type int, not the enum type. Check if this is a
+  // reference to an enumerator to detect wrong enum usage in C.
+  if (auto *DRE = dyn_cast<DeclRefExpr>(OrigScope)) {
+    if (auto *ECD = dyn_cast<EnumConstantDecl>(DRE->getDecl())) {
+      if (auto *EnumDecl = dyn_cast<clang::EnumDecl>(ECD->getDeclContext())) {
+        if (EnumDecl->getName() == "__memory_scope")
+          return;
+        S.Diag(OrigScope->getBeginLoc(), diag::warn_atomic_scope_wrong_enum)
+            << OrigScope->getSourceRange();
+        return;
+      }
     }
   }
 

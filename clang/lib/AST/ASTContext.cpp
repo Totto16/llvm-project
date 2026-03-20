@@ -1274,8 +1274,9 @@ TypedefDecl *ASTContext::getMemoryScopeDecl() const {
   MemoryScopeEnum->completeDefinition(IntTy, IntTy, NumPositiveBits, 0);
 
   QualType EnumType = getCanonicalTagType(MemoryScopeEnum);
-  for (EnumConstantDecl *Constant : MemoryScopeEnum->enumerators()) {
-    Constant->setType(EnumType);
+  if (getLangOpts().CPlusPlus) {
+    for (EnumConstantDecl *Constant : MemoryScopeEnum->enumerators())
+      Constant->setType(EnumType);
   }
 
   getTranslationUnitDecl()->addDecl(MemoryScopeEnum);
