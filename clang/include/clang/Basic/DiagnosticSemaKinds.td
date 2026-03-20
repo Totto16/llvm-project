@@ -9635,9 +9635,12 @@ def warn_atomic_op_has_invalid_memory_order : Warning<
   InGroup<DiagGroup<"atomic-memory-ordering">>;
 def err_atomic_op_has_invalid_sync_scope : Error<
   "synchronization scope argument to atomic operation is invalid">;
-def warn_atomic_op_scope_should_be_enum : Warning<
+def warn_atomic_scope_wrong_enum : Warning<
   "synchronization scope should be of type __memory_scope">,
   InGroup<AtomicMemoryScope>;
+def warn_atomic_scope_incorrect_type : Warning<
+  "synchronization scope should be of type __memory_scope">,
+  InGroup<AtomicMemoryScope>, DefaultIgnore;
 def warn_memory_scope_redeclared : Warning<
   "user declaration of '%0' conflicts with builtin memory scope enum">,
   InGroup<AtomicMemoryScope>;

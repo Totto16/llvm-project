@@ -1,4 +1,4 @@
-// RUN: %clang_cc1 -fsyntax-only -std=c11 -verify -triple=amdgcn-amd-amdhsa %s
+// RUN: %clang_cc1 -fsyntax-only -std=c11 -verify %s
 
 // Test that user enumerators shadowing builtin __memory_scope_* names
 // are caught by type checking when passed to scoped atomic operations.
@@ -29,17 +29,17 @@ void test_builtin_still_works(int *ptr) {
   val = __scoped_atomic_load_n(ptr, __ATOMIC_RELAXED, __memory_scope_device); // no warning
 }
 
-void test_integer_literal_deprecated(int *ptr) {
+void test_integer_literal_no_warning(int *ptr) {
   int val;
 
-  // Integer literals should get deprecation warning (not error)
-  __scoped_atomic_load(ptr, &val, __ATOMIC_RELAXED, 0); // expected-warning {{synchronization scope should be of type __memory_scope}}
+  // Integer literals do not warn by default (warning is opt-in with -Watomic-memory-scope)
+  __scoped_atomic_load(ptr, &val, __ATOMIC_RELAXED, 0);
 
-  val = __scoped_atomic_load_n(ptr, __ATOMIC_RELAXED, 1); // expected-warning {{synchronization scope should be of type __memory_scope}}
+  val = __scoped_atomic_load_n(ptr, __ATOMIC_RELAXED, 1);
 
-  // Integer variables should also get deprecation warning
+  // Integer variables also do not warn by default
   int scope = 2;
-  __scoped_atomic_store_n(ptr, 42, __ATOMIC_RELAXED, scope); // expected-warning {{synchronization scope should be of type __memory_scope}}
+  __scoped_atomic_store_n(ptr, 42, __ATOMIC_RELAXED, scope);
 }
 
 // Test shadowing with anonymous enum

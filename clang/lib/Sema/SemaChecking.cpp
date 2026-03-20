@@ -2100,18 +2100,18 @@ CheckBuiltinTargetInSupported(Sema &S, CallExpr *TheCall,
 }
 
 /// CheckScopedAtomicScopeArgument - Check the scope argument for scoped atomic
-/// operations and fences. Emits a deprecation warning if an integer type is
-/// used instead of the __memory_scope enum.
+/// operations and fences. Warns if a wrong enum type is used, and optionally
+/// warns if a non-enum type is used instead of the __memory_scope enum.
 static void CheckScopedAtomicScopeArgument(Sema &S, Expr *Scope) {
-  assert(Scope->getType()->isIntegerType() &&
-         "Non-integer type should have emitted an error before reaching here");
-  // Strip implicit casts to get the original expression type
   Expr *OrigScope = Scope->IgnoreParenImpCasts();
 
-  // Check if it's the __memory_scope enum type
   if (const auto *EnumTy = OrigScope->getType()->getAs<EnumType>()) {
-    if (EnumTy->getDecl()->getName() == "__memory_scope") {
+    if (EnumTy->getDecl()->getName() == "__memory_scope")
       return;
+    S.Diag(OrigScope->getBeginLoc(), diag::warn_atomic_scope_wrong_enum)
+        << OrigScope->getSourceRange();
+    return;
+  }
 
   // In C, enumerators have type int, not the enum type. Check if this is a
   // reference to an enumerator to detect wrong enum usage in C.
@@ -2127,9 +2127,9 @@ static void CheckScopedAtomicScopeArgument(Sema &S, Expr *Scope) {
     }
   }
 
-  // Use of any other integer type gets a warning
-  S.Diag(Scope->getBeginLoc(), diag::warn_atomic_op_scope_should_be_enum)
-      << Scope->getSourceRange();
+  // Not an enum. But this warning is disabled by default.
+  S.Diag(OrigScope->getBeginLoc(), diag::warn_atomic_scope_incorrect_type)
+      << OrigScope->getSourceRange();
 }
 
 static void CheckNonNullArgument(Sema &S, const Expr *ArgExpr,
@@ -5204,11 +5204,7 @@ ExprResult Sema::BuildAtomicExpr(SourceRange CallRange, SourceRange ExprRange,
             << Scope->getSourceRange();
     }
 
-    if (!Scope->getType()->isIntegerType()) {
-      // Ensure that it is an integer.
-      Diag(Scope->getBeginLoc(), diag::err_atomic_op_has_invalid_sync_scope)
-          << Scope->getSourceRange();
-    } else if (IsScoped) {
+    if (IsScoped) {
       // In the case of language-agnostic builtins, also check if it uses the
       // builtin enum type "__memory_scope".
       CheckScopedAtomicScopeArgument(*this, Scope);

@@ -2374,8 +2374,7 @@ bool Sema::LookupName(LookupResult &R, Scope *S, bool AllowBuiltinCreation,
       return true;
   }
 
-  // Check for __memory_scope builtins even when AllowBuiltinCreation is false,
-  // because we want to support __memory_scope as a builtin type name.
+  // Check for enum __memory_scope even when AllowBuiltinCreation is false.
   if (IdentifierInfo *II = Name.getAsIdentifierInfo()) {
     if (TryCreateMemoryScopeBuiltin(*this, R, *II))
       return true;
