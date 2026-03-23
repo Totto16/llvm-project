@@ -123,6 +123,22 @@ public:
     return *this;
   }
 
+  // A StringSwitch case that is selected if the specified predicate
+  // returns true for every character in a subject string.
+  StringSwitch &Predicate(function_ref<bool(char)> Pred, T Value) {
+    if (!Result && Str.find_if_not(Pred) == StringRef::npos)
+      Result = std::move(Value);
+    return *this;
+  }
+
+  // A StringSwitch case that is selected if the specified predicate
+  // returns true for the subject string.
+  StringSwitch &Predicate(function_ref<bool(StringRef)> Pred, T Value) {
+    if (!Result && Pred(Str))
+      Result = std::move(Value);
+    return *this;
+  }
+
   [[nodiscard]] R Default(T Value) {
     if (Result)
       return std::move(*Result);

@@ -257,6 +257,39 @@ TEST(StringSwitchTest, StringSwitchMultipleMatches) {
   EXPECT_EQ(1, Translate("b"));
 }
 
+TEST(StringPredicateTest, PredicateChar) {
+  auto IsAlpha = [](char Ch) {
+    return (Ch >= 'a' && Ch <= 'z') || (Ch >= 'A' && Ch <= 'Z');
+  };
+  auto PredicateMatch = [&](StringRef S) {
+    return llvm::StringSwitch<int>(S)
+        .Case("A", 0)
+        .Predicate(IsAlpha, 1)
+        .Case("B", 2)
+        .Case("C D", 3)
+        .Default(4);
+  };
+  EXPECT_EQ(0, PredicateMatch("A"));
+  EXPECT_EQ(1, PredicateMatch("abcdef"));
+  EXPECT_EQ(1, PredicateMatch("B"));
+  EXPECT_EQ(3, PredicateMatch("C D"));
+  EXPECT_EQ(4, PredicateMatch("1234"));
+}
+
+TEST(StringPredicateTest, PredicateStr) {
+  auto MatchFn = [](StringRef Str) { return Str == "abc" || Str == "def"; };
+  auto PredicateMatch = [&](StringRef S) {
+    return llvm::StringSwitch<int>(S)
+        .Case("abc", 0)
+        .Predicate(MatchFn, 1)
+        .Case("def", 2)
+        .Default(3);
+  };
+  EXPECT_EQ(0, PredicateMatch("abc"));
+  EXPECT_EQ(1, PredicateMatch("def"));
+  EXPECT_EQ(3, PredicateMatch("ghi"));
+}
+
 TEST(StringSwitchTest, DefaultUnreachable) {
   auto Translate = [](StringRef S) {
     return llvm::StringSwitch<int>(S)
