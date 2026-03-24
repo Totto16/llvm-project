@@ -15,6 +15,9 @@ namespace clang::tidy::totto {
 
 void UseFixedWidthTypesVarCheck::registerMatchers(MatchFinder *Finder) {
   Finder->addMatcher(varDecl().bind("var"), this);
+  Finder->addMatcher(functionDecl().bind("func"), this);
+  Finder->addMatcher(fieldDecl().bind("field"), this);
+  Finder->addMatcher(enumDecl().bind("enum"), this);
 }
 
 enum class ClassifiedType : std::uint8_t {
@@ -89,21 +92,125 @@ static ClassifiedTypeResult classifyQualType(const QualType &Type,
                               UnqualifiedType};
 }
 
-void UseFixedWidthTypesVarCheck::check(const MatchFinder::MatchResult &Result) {
-  const auto *MatchedDecl = Result.Nodes.getNodeAs<VarDecl>("var");
-
-  const auto &TypeOfDecl = MatchedDecl->getType();
+void UseFixedWidthTypesVarCheck::processVarDecl(const VarDecl &decl) {
+  const auto &TypeOfDecl = decl.getType();
 
   const auto ClassifiedType = classifyQualType(TypeOfDecl);
 
   if (ClassifiedType.type != ClassifiedType::BuiltinInteger)
     return;
 
-  diag(MatchedDecl->getLocation(),
-       "variable %0 has type '%1', which should be rewritten into using a "
+  diag(decl.getLocation(),
+       "variable '%0' has type '%1', which should be rewritten into using a "
        "fixed type",
        DiagnosticIDs::Warning)
-      << MatchedDecl << ClassifiedType.format();
+      << decl.getName() << ClassifiedType.format();
+}
+
+void UseFixedWidthTypesVarCheck::processFunctionDecl(const FunctionDecl &decl) {
+  const auto &ReturnTypeOfDecl = decl.getReturnType();
+
+  const auto ClassifiedType = classifyQualType(ReturnTypeOfDecl);
+
+  if (ClassifiedType.type != ClassifiedType::BuiltinInteger)
+    return;
+
+  diag(decl.getReturnTypeSourceRange().getBegin(),
+       "return type for function '%0' has type '%1', which should be rewritten "
+       "into using a "
+       "fixed type",
+       DiagnosticIDs::Warning)
+      << decl.getName() << ClassifiedType.format();
+}
+
+void UseFixedWidthTypesVarCheck::processFieldDecl(const FieldDecl &decl) {
+  const auto &TypeOfDecl = decl.getType();
+
+  const auto ClassifiedType = classifyQualType(TypeOfDecl);
+
+  if (ClassifiedType.type != ClassifiedType::BuiltinInteger)
+    return;
+
+  const RecordDecl *StructDecl = decl.getParent();
+
+  std::string StructName;
+
+  if (const auto *MaybeName = StructDecl->getTypedefNameForAnonDecl();
+      MaybeName)
+    StructName = MaybeName->getNameAsString();
+  else if (StructDecl->isAnonymousStructOrUnion())
+    StructName = "(anonymous struct)";
+  else
+    StructName = StructDecl->getNameAsString();
+
+  if (StructName.empty())
+    StructName = "(anonymous struct)";
+
+  diag(
+      decl.getLocation(),
+      "member '%0' of the struct '%1' has type '%2', which should be rewritten "
+      "into using a "
+      "fixed type",
+      DiagnosticIDs::Warning)
+      << decl.getName() << StructName << ClassifiedType.format();
+}
+
+void UseFixedWidthTypesVarCheck::processEnumDecl(const EnumDecl &decl) {
+  // no underlying type
+  if (!decl.getIntegerTypeSourceInfo())
+    return;
+
+  const auto &FixedTypeOfDecl = decl.getIntegerType();
+
+  const auto ClassifiedType = classifyQualType(FixedTypeOfDecl);
+
+  if (ClassifiedType.type != ClassifiedType::BuiltinInteger)
+    return;
+
+  const IdentifierInfo *EnumDeclVal = decl.getIdentifier();
+
+  std::string EnumName;
+
+  if (EnumDeclVal)
+    EnumName = EnumDeclVal->getName().str();
+  else if (const auto *MaybeName = decl.getTypedefNameForAnonDecl(); MaybeName)
+    EnumName = MaybeName->getNameAsString();
+  else
+    EnumName = "(anonymous enum)";
+
+  if (EnumName.empty())
+    EnumName = "(anonymous enum)";
+
+  diag(decl.getLocation(),
+       "enum '%0' has the underlying type '%1', which should be rewritten into "
+       "using a "
+       "fixed type",
+       DiagnosticIDs::Warning)
+      << EnumName << ClassifiedType.format();
+}
+
+void UseFixedWidthTypesVarCheck::check(const MatchFinder::MatchResult &Result) {
+  const auto *VarDeclVal = Result.Nodes.getNodeAs<VarDecl>("var");
+
+  if (VarDeclVal)
+    return processVarDecl(*VarDeclVal);
+
+  const auto *FuncDeclVal = Result.Nodes.getNodeAs<FunctionDecl>("func");
+
+  if (FuncDeclVal)
+    return processFunctionDecl(*FuncDeclVal);
+
+  const auto *FieldDeclVal = Result.Nodes.getNodeAs<FieldDecl>("field");
+
+  if (FieldDeclVal)
+    return processFieldDecl(*FieldDeclVal);
+
+  const auto *EnumDeclVal = Result.Nodes.getNodeAs<EnumDecl>("enum");
+
+  if (EnumDeclVal)
+    return processEnumDecl(*EnumDeclVal);
+
+  llvm_unreachable("implementation error");
 }
 
 } // namespace clang::tidy::totto
