@@ -23,6 +23,12 @@ public:
       : ClangTidyCheck(Name, Context) {}
   void registerMatchers(ast_matchers::MatchFinder *Finder) override;
   void check(const ast_matchers::MatchFinder::MatchResult &Result) override;
+
+private:
+  void processVarDecl(const VarDecl &decl);
+  void processFunctionDecl(const FunctionDecl &decl);
+  void processFieldDecl(const FieldDecl &decl);
+  void processEnumDecl(const EnumDecl &decl);
 };
 
 } // namespace clang::tidy::totto
