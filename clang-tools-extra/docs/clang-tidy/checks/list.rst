@@ -435,6 +435,7 @@ Clang-Tidy Checks
    :doc:`readability-use-anyofallof <readability/use-anyofallof>`,
    :doc:`readability-use-concise-preprocessor-directives <readability/use-concise-preprocessor-directives>`, "Yes"
    :doc:`readability-use-std-min-max <readability/use-std-min-max>`, "Yes"
+   :doc:`totto-use-fixed-width-types-var <totto/use-fixed-width-types-var>`, "Yes"
    :doc:`zircon-temporary-objects <zircon/temporary-objects>`,
 
 Check aliases

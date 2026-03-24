@@ -100,6 +100,11 @@ extern volatile int MiscModuleAnchorSource;
 [[maybe_unused]] static int MiscModuleAnchorDestination =
     MiscModuleAnchorSource;
 
+// This anchor is used to force the linker to link the MiscModule.
+extern volatile int TottoModuleAnchorSource;
+[[maybe_unused]] static int TottoModuleAnchorDestination =
+    TottoModuleAnchorSource;
+
 // This anchor is used to force the linker to link the ModernizeModule.
 extern volatile int ModernizeModuleAnchorSource;
 [[maybe_unused]] static int ModernizeModuleAnchorDestination =

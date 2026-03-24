@@ -13,6 +13,7 @@ if(CLANG_TIDY_ENABLE_QUERY_BASED_CUSTOM_CHECKS)
     clangTidy
     clangTidyBugproneModule
     clangTidyMiscModule
+    clangTidyTottoModule
     clangTidyModernizeModule
     clangTidyPerformanceModule
     clangTidyReadabilityModule

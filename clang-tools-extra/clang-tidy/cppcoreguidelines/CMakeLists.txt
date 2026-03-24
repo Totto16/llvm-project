@@ -41,6 +41,7 @@ add_clang_library(clangTidyCppCoreGuidelinesModule STATIC
   clangTidy
   clangTidyBugproneModule
   clangTidyMiscModule
+  clangTidyTottoModule
   clangTidyModernizeModule
   clangTidyPerformanceModule
   clangTidyReadabilityModule
