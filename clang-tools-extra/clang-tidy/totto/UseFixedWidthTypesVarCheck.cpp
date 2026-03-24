@@ -41,53 +41,68 @@ public:
 
     std::string Result = this->format_type();
 
-    for (size_t i = 0; i < this->depth; ++i)
-      Result += " *";
+    for (size_t i = 0; i < this->depth; ++i) {
+      if (i != 0)
+        Result += " ";
+
+      Result += "*";
+    }
 
     return Result;
   }
 };
 
-static ClassifiedTypeResult classifyQualType(const QualType &type_,
+static ClassifiedTypeResult classifyQualType(const QualType &Type,
                                              const size_t depth = 0) {
-  const auto &UnqualifiedType = type_.getUnqualifiedType();
+  const auto &UnqualifiedType = Type.getUnqualifiedType();
 
   if (UnqualifiedType->isAnyPointerType())
     return classifyQualType(UnqualifiedType->getPointeeType(), depth + 1);
 
-  if (!UnqualifiedType->isBuiltinType())
+  // NOTE: don't use isBuiltinType() as that uses the canonical type, we want
+  // the literal type, canonical can be the wrong e.g. on size_t
+  if (!(isa<BuiltinType>(UnqualifiedType))) {
+    // NOTE: not checking if this is an alias, as we want alias to be
     return ClassifiedTypeResult{ClassifiedType::UserDefined, depth,
                                 UnqualifiedType};
+  }
 
-  if (UnqualifiedType->isBooleanType())
+  const auto *const BuiltinTypeVal = dyn_cast<BuiltinType>(UnqualifiedType);
+  assert(BuiltinTypeVal);
+
+  if (BuiltinTypeVal->getKind() == BuiltinType::Bool)
     return ClassifiedTypeResult{ClassifiedType::BuiltinOther, depth,
                                 UnqualifiedType};
 
-  const auto *const BuiltinTypeVal = dyn_cast<BuiltinType>(UnqualifiedType);
-  assert(builtinType);
+  if (BuiltinTypeVal->getKind() == BuiltinType::Void)
+    return ClassifiedTypeResult{ClassifiedType::BuiltinOther, depth,
+                                UnqualifiedType};
 
-  // TODO
-  (void)BuiltinTypeVal;
+  // char* are an exceptions, as they are strings
+  if (depth == 1 && (BuiltinTypeVal->getKind() == BuiltinType::Char_S ||
+                     BuiltinTypeVal->getKind() == BuiltinType::Char_U)) {
+    return ClassifiedTypeResult{ClassifiedType::BuiltinOther, depth,
+                                UnqualifiedType};
+  }
 
   return ClassifiedTypeResult{ClassifiedType::BuiltinInteger, depth,
                               UnqualifiedType};
 }
 
 void UseFixedWidthTypesVarCheck::check(const MatchFinder::MatchResult &Result) {
-  // FIXME: Add callback implementation.
   const auto *MatchedDecl = Result.Nodes.getNodeAs<VarDecl>("var");
 
   const auto &TypeOfDecl = MatchedDecl->getType();
 
   const auto ClassifiedType = classifyQualType(TypeOfDecl);
 
-  if (ClassifiedType.type == ClassifiedType::BuiltinInteger)
+  if (ClassifiedType.type != ClassifiedType::BuiltinInteger)
     return;
 
   diag(MatchedDecl->getLocation(),
-       "variable %0 has a non fixed integer type (or is not an alias to that "
-       "type):\n%1",
-       DiagnosticIDs::Error)
+       "variable %0 has type '%1', which should be rewritten into using a "
+       "fixed type",
+       DiagnosticIDs::Warning)
       << MatchedDecl << ClassifiedType.format();
 }
 
