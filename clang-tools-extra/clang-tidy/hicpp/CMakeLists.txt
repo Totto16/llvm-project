@@ -17,6 +17,7 @@ add_clang_library(clangTidyHICPPModule STATIC
   clangTidyCppCoreGuidelinesModule
   clangTidyGoogleModule
   clangTidyMiscModule
+  clangTidyTottoModule
   clangTidyModernizeModule
   clangTidyPerformanceModule
   clangTidyReadabilityModule

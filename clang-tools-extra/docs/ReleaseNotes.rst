@@ -361,6 +361,26 @@ New checks
 
   Finds redundant uses of the ``typename`` keyword.
 
+- New :doc:`totto-use-fixed-width-types-var
+  <clang-tidy/checks/totto/use-fixed-width-types-var>` check.
+
+  FIXME: Write a short description.
+
+- New :doc:`totto-use-fixed-width-types-var
+  <clang-tidy/checks/totto/use-fixed-width-types-var>` check.
+
+  FIXME: Write a short description.
+
+- New :doc:`totto-use-fixed-width-types-var
+  <clang-tidy/checks/totto/use-fixed-width-types-var>` check.
+
+  FIXME: Write a short description.
+
+- New :doc:`totto-use-fixed-width-types-var
+  <clang-tidy/checks/totto/use-fixed-width-types-var>` check.
+
+  FIXME: Write a short description.
+
 New check aliases
 ^^^^^^^^^^^^^^^^^
 
