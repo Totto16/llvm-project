@@ -9,6 +9,7 @@ include_directories(BEFORE "${CMAKE_CURRENT_SOURCE_DIR}/../../include-cleaner/in
 add_clang_library(clangTidyTottoModule STATIC
   TottoTidyModule.cpp
   UseFixedWidthTypesVarCheck.cpp
+  ConstCorrectnessCheckC.cpp
 
   LINK_LIBS
   clangTidy

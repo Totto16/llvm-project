@@ -8,6 +8,7 @@
 
 #include "../ClangTidy.h"
 #include "../ClangTidyModule.h"
+#include "ConstCorrectnessCheckC.h"
 #include "UseFixedWidthTypesVarCheck.h"
 
 namespace clang::tidy {
@@ -19,6 +20,8 @@ public:
   void addCheckFactories(ClangTidyCheckFactories &CheckFactories) override {
     CheckFactories.registerCheck<UseFixedWidthTypesVarCheck>(
         "totto-use-fixed-width-types-var");
+    CheckFactories.registerCheck<ConstCorrectnessCheckC>(
+        "totto-const-correctness-c");
   }
 };
 
