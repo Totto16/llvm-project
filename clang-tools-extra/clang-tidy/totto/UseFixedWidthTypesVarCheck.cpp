@@ -88,6 +88,10 @@ static ClassifiedTypeResult classifyQualType(const QualType &Type,
                                 UnqualifiedType};
   }
 
+  if (BuiltinTypeVal->isFloatingPoint())
+    return ClassifiedTypeResult{ClassifiedType::BuiltinOther, depth,
+                                UnqualifiedType};
+
   return ClassifiedTypeResult{ClassifiedType::BuiltinInteger, depth,
                               UnqualifiedType};
 }

@@ -105,3 +105,6 @@ int32_t f16(){
 
     return (int32_t)result;
 }
+
+
+float f17(double should_be_ok);
