@@ -5,7 +5,7 @@
 #include <stddef.h>
 
 void f(int wrong_parameter);
-// CHECK-MESSAGES: :[[@LINE-1]]:6: warning: variable 'wrong_parameter' has type 'int', which should be rewritten into using a fixed type [totto-use-fixed-width-types-var]
+// CHECK-MESSAGES: :[[@LINE-1]]:12: warning: variable 'wrong_parameter' has type 'int', which should be rewritten into using a fixed type [totto-use-fixed-width-types-var]
 
 void f2(size_t fine_paramater);
 
@@ -27,7 +27,7 @@ void f4_2(int wrong1, unsigned int wrong2, long wrong3, unsigned long wrong4, lo
 // CHECK-MESSAGES: [[@LINE-6]]:116: warning: variable 'wrong6' has type 'unsigned long long', which should be rewritten into using a fixed type [totto-use-fixed-width-types-var]
 
 void f5(const char wrong_too);
-// CHECK-MESSAGES: :[[@LINE-1]]:6: warning: variable 'wrong_too' has type 'char', which should be rewritten into using a fixed type [totto-use-fixed-width-types-var]
+// CHECK-MESSAGES: :[[@LINE-1]]:20: warning: variable 'wrong_too' has type 'char', which should be rewritten into using a fixed type [totto-use-fixed-width-types-var]
 
 typedef int NativeFd;
 
@@ -42,9 +42,9 @@ void f7(void* fine, uint8_t* fine2);
 void f8(void****** fine);
 
 void f9(int * not_fine);
-// CHECK-MESSAGES: :[[@LINE-1]]:34: warning: variable 'not_fine' has type 'int *', which should be rewritten into using a fixed type [totto-use-fixed-width-types-var]
+// CHECK-MESSAGES: :[[@LINE-1]]:15: warning: variable 'not_fine' has type 'int*', which should be rewritten into using a fixed type [totto-use-fixed-width-types-var]
 
 void f10(const int const * const not_fine);
-// CHECK-MESSAGES: :[[@LINE-1]]:34: warning: variable 'not_fine' has type 'int *', which should be rewritten into using a fixed type [totto-use-fixed-width-types-var]
+// CHECK-MESSAGES: :[[@LINE-1]]:34: warning: variable 'not_fine' has type 'int*', which should be rewritten into using a fixed type [totto-use-fixed-width-types-var]
 
 void f10_exception(const char* exception_should_be_fine);
