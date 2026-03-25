@@ -3,7 +3,6 @@
 // RUN:     { \
 // RUN: totto-function-passing-type.ByValue: '^(PassByValue)$', \
 // RUN: totto-function-passing-type.ByPtr: '^(PassByPtr)$', \
-// RUN:     bugprone-argument-comment.CommentNullPtrs: true, \
 // RUN:  }}"
 
 #include <stdint.h>
