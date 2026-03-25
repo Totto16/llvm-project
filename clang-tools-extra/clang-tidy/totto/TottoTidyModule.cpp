@@ -9,6 +9,7 @@
 #include "../ClangTidy.h"
 #include "../ClangTidyModule.h"
 #include "ConstCorrectnessCheckC.h"
+#include "FunctionPassingTypeCheck.h"
 #include "UseFixedWidthTypesVarCheck.h"
 
 namespace clang::tidy {
@@ -18,6 +19,8 @@ namespace {
 class TottoModule : public ClangTidyModule {
 public:
   void addCheckFactories(ClangTidyCheckFactories &CheckFactories) override {
+    CheckFactories.registerCheck<FunctionPassingTypeCheck>(
+        "totto-function-passing-type");
     CheckFactories.registerCheck<UseFixedWidthTypesVarCheck>(
         "totto-use-fixed-width-types-var");
     CheckFactories.registerCheck<ConstCorrectnessCheckC>(
