@@ -24,8 +24,15 @@ public:
   void registerMatchers(ast_matchers::MatchFinder *Finder) override;
   void check(const ast_matchers::MatchFinder::MatchResult &Result) override;
 
+  // only allow C, as we don't have to handle complex c++ types
+  bool isLanguageVersionSupported(const LangOptions &LangOpts) const override {
+    return LangOpts.C99 || LangOpts.C11 || LangOpts.C17 || LangOpts.C23 ||
+           LangOpts.C2y;
+  }
+
 private:
   void processVarDecl(const VarDecl &decl);
+  void processCastExpr(const CastExpr &decl);
   void processFunctionDecl(const FunctionDecl &decl);
   void processFieldDecl(const FieldDecl &decl);
   void processEnumDecl(const EnumDecl &decl);
