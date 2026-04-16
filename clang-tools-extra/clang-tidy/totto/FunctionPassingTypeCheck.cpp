@@ -135,7 +135,7 @@ void FunctionPassingTypeCheck::check(const MatchFinder::MatchResult &Result) {
           diag(Param->getLocation(),
                "paramater %0 with type '%1' matches the types, that need to be "
                "passed by value, so don't pass it by ptr",
-               DiagnosticIDs::Warning)
+               DiagnosticIDs::Error)
               << Param << classification.TypeName;
         }
       }
@@ -146,7 +146,7 @@ void FunctionPassingTypeCheck::check(const MatchFinder::MatchResult &Result) {
           diag(Param->getLocation(),
                "paramater %0 with type '%1' matches the types, that need to be "
                "passed by ptr, so don't pass it by value",
-               DiagnosticIDs::Warning)
+               DiagnosticIDs::Error)
               << Param << classification.TypeName;
         }
       }
