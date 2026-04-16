@@ -167,7 +167,7 @@ void UseFixedWidthTypesVarCheck::processVarDecl(const VarDecl &decl) {
   diag(decl.getLocation(),
        "variable '%0' has type '%1', which should be rewritten into using a "
        "fixed type",
-       DiagnosticIDs::Error)
+       DiagnosticIDs::Warning)
       << decl.getName() << ClassifiedType.format();
 }
 
@@ -192,10 +192,9 @@ void UseFixedWidthTypesVarCheck::processCastExpr(const CastExpr &decl) {
 
   diag(decl.getExprLoc(),
        "cast to type '%0', should be rewritten into using a "
-       "fixed type<<< %2 %3 %4",
-       DiagnosticIDs::Error)
-      << ClassifiedType.format() << decl.getCastKind() << decl.getCastKindName()
-      << decl.getType().getAsString();
+       "fixed type",
+       DiagnosticIDs::Warning)
+      << ClassifiedType.format();
 }
 
 void UseFixedWidthTypesVarCheck::processFunctionDecl(const FunctionDecl &decl) {
@@ -207,7 +206,7 @@ void UseFixedWidthTypesVarCheck::processFunctionDecl(const FunctionDecl &decl) {
     diag(decl.getLocation(),
          "function decl '%0' - type '%1' is not recognized by our type "
          "processor",
-         DiagnosticIDs::Error)
+         DiagnosticIDs::Warning)
         << decl.getName() << ReturnTypeOfDecl.getAsString();
   }
 
@@ -218,7 +217,7 @@ void UseFixedWidthTypesVarCheck::processFunctionDecl(const FunctionDecl &decl) {
        "return type for function '%0' has type '%1', which should be rewritten "
        "into using a "
        "fixed type",
-       DiagnosticIDs::Error)
+       DiagnosticIDs::Warning)
       << decl.getName() << ClassifiedType.format();
 }
 
@@ -257,7 +256,7 @@ void UseFixedWidthTypesVarCheck::processFieldDecl(const FieldDecl &decl) {
       "member '%0' of the struct '%1' has type '%2', which should be rewritten "
       "into using a "
       "fixed type",
-      DiagnosticIDs::Error)
+      DiagnosticIDs::Warning)
       << decl.getName() << StructName << ClassifiedType.format();
 }
 
@@ -298,7 +297,7 @@ void UseFixedWidthTypesVarCheck::processEnumDecl(const EnumDecl &decl) {
        "enum '%0' has the underlying type '%1', which should be rewritten into "
        "using a "
        "fixed type",
-       DiagnosticIDs::Error)
+       DiagnosticIDs::Warning)
       << EnumName << ClassifiedType.format();
 }
 
