@@ -28,10 +28,15 @@ enum class ClassifiedType : std::uint8_t {
   Error,
 };
 
+enum class WrapperType : std::uint8_t {
+  Ptr,
+  Array,
+};
+
 struct ClassifiedTypeResult {
 public:
   ClassifiedType type;
-  size_t depth;
+  std::vector<WrapperType> wrapper;
   QualType val;
 
 private:
@@ -41,24 +46,32 @@ private:
 
 public:
   [[nodiscard]] std::string format() const {
-    if (depth == 0)
+    if (wrapper.empty())
       return this->format_type();
 
     std::string Result = this->format_type();
 
-    for (size_t i = 0; i < this->depth; ++i) {
+    for (size_t i = 0; i < this->wrapper.size(); ++i) {
       if (i != 0)
         Result += " ";
 
-      Result += "*";
+      const auto wType = this->wrapper.at(i);
+
+      if (wType == WrapperType::Ptr)
+        Result += "*";
+      else if (wType == WrapperType::Array)
+        Result = "(" + Result + ")[]";
+      else
+        llvm_unreachable("implementation error");
     }
 
     return Result;
   }
 };
 
-static ClassifiedTypeResult classifyQualType(const QualType &Type,
-                                             const size_t depth = 0) {
+static ClassifiedTypeResult
+classifyQualType(const QualType &Type,
+                 const std::vector<WrapperType> &Wrapper = {}) {
   const auto &UnqualifiedType = Type.getUnqualifiedType();
 
   // NOTE: don't use isBuiltinType() as that uses the canonical type, we want
@@ -68,63 +81,72 @@ static ClassifiedTypeResult classifyQualType(const QualType &Type,
     assert(BuiltinTypeVal);
 
     if (BuiltinTypeVal->getKind() == BuiltinType::Bool)
-      return ClassifiedTypeResult{ClassifiedType::BuiltinOther, depth,
+      return ClassifiedTypeResult{ClassifiedType::BuiltinOther, Wrapper,
                                   UnqualifiedType};
 
     if (BuiltinTypeVal->getKind() == BuiltinType::Void)
-      return ClassifiedTypeResult{ClassifiedType::BuiltinOther, depth,
+      return ClassifiedTypeResult{ClassifiedType::BuiltinOther, Wrapper,
                                   UnqualifiedType};
 
-    // char* are an exceptions, as they are strings
-    if (depth == 1 && (BuiltinTypeVal->getKind() == BuiltinType::Char_S ||
-                       BuiltinTypeVal->getKind() == BuiltinType::Char_U)) {
-      return ClassifiedTypeResult{ClassifiedType::BuiltinOther, depth,
-                                  UnqualifiedType};
+    if (Wrapper.size() == 1 && Wrapper.at(0) == WrapperType::Ptr) {
+      // char* are an exceptions, as they are strings
+      if (BuiltinTypeVal->getKind() == BuiltinType::Char_S ||
+          BuiltinTypeVal->getKind() == BuiltinType::Char_U) {
+        return ClassifiedTypeResult{ClassifiedType::BuiltinOther, Wrapper,
+                                    UnqualifiedType};
+      }
     }
 
     if (BuiltinTypeVal->isFloatingPoint())
-      return ClassifiedTypeResult{ClassifiedType::BuiltinOther, depth,
+      return ClassifiedTypeResult{ClassifiedType::BuiltinOther, Wrapper,
                                   UnqualifiedType};
 
-    return ClassifiedTypeResult{ClassifiedType::BuiltinInteger, depth,
+    return ClassifiedTypeResult{ClassifiedType::BuiltinInteger, Wrapper,
                                 UnqualifiedType};
   }
 
   if (UnqualifiedType->isIncompleteType())
-    return ClassifiedTypeResult{ClassifiedType::Error, depth, UnqualifiedType};
+    return ClassifiedTypeResult{ClassifiedType::Error, Wrapper,
+                                UnqualifiedType};
 
   if (UnqualifiedType->isStructureOrClassType()) {
-    return ClassifiedTypeResult{ClassifiedType::UserDefined, depth,
+    return ClassifiedTypeResult{ClassifiedType::UserDefined, Wrapper,
                                 UnqualifiedType};
   }
 
   if (isa<EnumType>(UnqualifiedType)) {
-    return ClassifiedTypeResult{ClassifiedType::UserDefined, depth,
+    return ClassifiedTypeResult{ClassifiedType::UserDefined, Wrapper,
                                 UnqualifiedType};
   }
 
-  if (UnqualifiedType->isAnyPointerType())
-    return classifyQualType(UnqualifiedType->getPointeeType(), depth + 1);
+  if (UnqualifiedType->isAnyPointerType()) {
+    auto NewWrapper = Wrapper;
+    NewWrapper.push_back(WrapperType::Ptr);
+    return classifyQualType(UnqualifiedType->getPointeeType(), NewWrapper);
+  }
 
   if (isa<ArrayType>(UnqualifiedType)) {
     const auto *const ArrayTypeVal = dyn_cast<ArrayType>(UnqualifiedType);
     assert(ArrayTypeVal);
 
-    return classifyQualType(ArrayTypeVal->getElementType(), depth + 1);
+    auto NewWrapper = Wrapper;
+    NewWrapper.push_back(WrapperType::Array);
+
+    return classifyQualType(ArrayTypeVal->getElementType(), NewWrapper);
   }
 
   if (UnqualifiedType->isTypedefNameType()) {
     // NOTE: not checking if this is an alias, as we want an alias to be not
     // resolved
-    return ClassifiedTypeResult{ClassifiedType::UserDefined, depth,
+    return ClassifiedTypeResult{ClassifiedType::UserDefined, Wrapper,
                                 UnqualifiedType};
   }
 
   if (UnqualifiedType->isCompoundType())
-    return ClassifiedTypeResult{ClassifiedType::UserDefined, depth,
+    return ClassifiedTypeResult{ClassifiedType::UserDefined, Wrapper,
                                 UnqualifiedType};
 
-  return ClassifiedTypeResult{ClassifiedType::Error, depth, UnqualifiedType};
+  return ClassifiedTypeResult{ClassifiedType::Error, Wrapper, UnqualifiedType};
 }
 
 void UseFixedWidthTypesVarCheck::processVarDecl(const VarDecl &decl) {
@@ -150,7 +172,8 @@ void UseFixedWidthTypesVarCheck::processVarDecl(const VarDecl &decl) {
 }
 
 void UseFixedWidthTypesVarCheck::processCastExpr(const CastExpr &decl) {
-  if (decl.getCastKind() == CastKind::CK_LValueToRValue)
+  if (decl.getCastKind() == CastKind::CK_LValueToRValue ||
+      decl.getCastKind() == CastKind::CK_ArrayToPointerDecay)
     return;
 
   const auto &TypeOfDecl = decl.getType();
@@ -169,9 +192,10 @@ void UseFixedWidthTypesVarCheck::processCastExpr(const CastExpr &decl) {
 
   diag(decl.getExprLoc(),
        "cast to type '%0', should be rewritten into using a "
-       "fixed type",
+       "fixed type<<< %2 %3 %4",
        DiagnosticIDs::Error)
-      << ClassifiedType.format();
+      << ClassifiedType.format() << decl.getCastKind() << decl.getCastKindName()
+      << decl.getType().getAsString();
 }
 
 void UseFixedWidthTypesVarCheck::processFunctionDecl(const FunctionDecl &decl) {

@@ -120,9 +120,12 @@ float f17(double should_be_ok){
 
     //TODO: make this work
     char invalid_type[8] = {};
-// CHECK-MESSAGES: :[[@LINE-1]]:5: error: enum '(anonymous enum)' has the underlying type 'int', which should be rewritten into using a fixed type [totto-use-fixed-width-types-var]
+// CHECK-MESSAGES: :[[@LINE-1]]:10: error: variable 'invalid_type' has type '(char)[]', which should be rewritten into using a fixed type [totto-use-fixed-width-types-var]
 
-    return (invalid_type[0] + valid_type[0]) == 0 ? 0.0F : 1.0F;
+    int invalid_type2[2] = {};
+// CHECK-MESSAGES: :[[@LINE-1]]:9: error: variable 'invalid_type2' has type '(int)[]', which should be rewritten into using a fixed type [totto-use-fixed-width-types-var]
+
+    return (invalid_type[0] + valid_type[0] + invalid_type2[0]) == 0 ? 0.0F : 1.0F;
 }
 
 
