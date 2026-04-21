@@ -150,6 +150,11 @@ classifyQualType(const QualType &Type,
     return ClassifiedTypeResult{ClassifiedType::UserDefined, Wrapper,
                                 UnqualifiedType};
 
+  if (isa<PredefinedSugarType>(UnqualifiedType)) {
+    return ClassifiedTypeResult{ClassifiedType::UserDefined, Wrapper,
+                                UnqualifiedType};
+  }
+
   return ClassifiedTypeResult{ClassifiedType::Error, Wrapper, UnqualifiedType};
 }
 

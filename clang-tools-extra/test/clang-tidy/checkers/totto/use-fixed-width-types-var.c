@@ -128,10 +128,17 @@ float f17(double should_be_ok){
     return (invalid_type[0] + valid_type[0] + invalid_type2[0]) == 0 ? 0.0F : 1.0F;
 }
 
+#define ERR_BUF_SIZE 512
+
 typedef struct OpaqueStructImpl OpaqueStruct;
 
-void fn(void){
+size_t fn(void){
     OpaqueStruct* result = NULL;
 
     (void)result;
+
+    size_t res = f12(sizeof(char) * (ERR_BUF_SIZE + 1));
+
+    return res;
 }
+
