@@ -128,4 +128,10 @@ float f17(double should_be_ok){
     return (invalid_type[0] + valid_type[0] + invalid_type2[0]) == 0 ? 0.0F : 1.0F;
 }
 
+typedef struct OpaqueStructImpl OpaqueStruct;
 
+void fn(void){
+    OpaqueStruct* result = NULL;
+
+    (void)result;
+}

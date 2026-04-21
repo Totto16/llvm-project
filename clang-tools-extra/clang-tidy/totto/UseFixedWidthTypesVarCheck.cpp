@@ -105,9 +105,13 @@ classifyQualType(const QualType &Type,
                                 UnqualifiedType};
   }
 
-  if (UnqualifiedType->isIncompleteType())
-    return ClassifiedTypeResult{ClassifiedType::Error, Wrapper,
+  if (UnqualifiedType->isIncompleteType()) {
+    // incomplete types are always user defined, as int and all the other ones
+    // are never incomplete and AFAIk in C they have to be structs or similar,
+    // which is user defined for sure
+    return ClassifiedTypeResult{ClassifiedType::UserDefined, Wrapper,
                                 UnqualifiedType};
+  }
 
   if (UnqualifiedType->isStructureOrClassType()) {
     return ClassifiedTypeResult{ClassifiedType::UserDefined, Wrapper,
