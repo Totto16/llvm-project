@@ -59,6 +59,11 @@ int timespec_get( struct timespec *ts, int base); // C++17
 #    endif
 #  endif
 
+#  if defined(__UEFI__)
+//NOTE: UEFIs StdLib Pkg uses <sys/time.h> for the time include
+#    include <sys/time.h>
+#  endif
+
 #  if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #    pragma GCC system_header
 #  endif
@@ -80,7 +85,7 @@ using ::ctime _LIBCPP_USING_IF_EXISTS;
 using ::gmtime _LIBCPP_USING_IF_EXISTS;
 using ::localtime _LIBCPP_USING_IF_EXISTS;
 using ::strftime _LIBCPP_USING_IF_EXISTS;
-#  if _LIBCPP_STD_VER >= 17
+#  if _LIBCPP_STD_VER >= 17 && !defined(__UEFI__)
 using ::timespec_get _LIBCPP_USING_IF_EXISTS;
 #  endif
 
