@@ -145,6 +145,17 @@ Types:
 #else
 #  include <__config>
 
+/* C99 stdlib (e.g. glibc < 2.18) does not provide macros needed
+   for C++11 unless __STDC_LIMIT_MACROS and __STDC_CONSTANT_MACROS
+   are defined
+*/
+#if defined(__cplusplus) && !defined(__STDC_LIMIT_MACROS)
+#  define __STDC_LIMIT_MACROS
+#endif
+#if defined(__cplusplus) && !defined(__STDC_CONSTANT_MACROS)
+#  define __STDC_CONSTANT_MACROS
+#endif
+
 #  if __has_include(<stdint.h>)
 #    include <stdint.h>
 #  endif
