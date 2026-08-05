@@ -130,7 +130,9 @@ using ::snprintf _LIBCPP_USING_IF_EXISTS;
 using ::sprintf _LIBCPP_USING_IF_EXISTS;
 using ::sscanf _LIBCPP_USING_IF_EXISTS;
 using ::vfprintf _LIBCPP_USING_IF_EXISTS;
+#if !defined(__UEFI__)
 using ::vfscanf _LIBCPP_USING_IF_EXISTS;
+#endif
 using ::vsscanf _LIBCPP_USING_IF_EXISTS;
 using ::vsnprintf _LIBCPP_USING_IF_EXISTS;
 using ::vsprintf _LIBCPP_USING_IF_EXISTS;
