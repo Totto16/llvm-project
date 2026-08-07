@@ -304,6 +304,7 @@ typedef __char32_t char32_t;
 #  if !_LIBCPP_HAS_EXCEPTIONS
 #    define _LIBCPP_EXCEPTIONS_SIG n
 #  else
+#    error "CAN'T USE EXCEPTIONS on UEFI"
 #    define _LIBCPP_EXCEPTIONS_SIG e
 #  endif
 

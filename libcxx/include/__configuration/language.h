@@ -38,13 +38,13 @@
 #endif // __cplusplus
 // NOLINTEND(libcpp-cpp-version-check)
 
-#if defined(__cpp_rtti) && __cpp_rtti >= 199711L
+#if defined(__cpp_rtti) && __cpp_rtti >= 199711L && !defined(__UEFI__)
 #  define _LIBCPP_HAS_RTTI 1
 #else
 #  define _LIBCPP_HAS_RTTI 0
 #endif
 
-#if defined(__cpp_exceptions) && __cpp_exceptions >= 199711L
+#if defined(__cpp_exceptions) && __cpp_exceptions >= 199711L && !defined(__UEFI__)
 #  define _LIBCPP_HAS_EXCEPTIONS 1
 #else
 #  define _LIBCPP_HAS_EXCEPTIONS 0
