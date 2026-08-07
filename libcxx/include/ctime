@@ -60,8 +60,22 @@ int timespec_get( struct timespec *ts, int base); // C++17
 #  endif
 
 #  if defined(__UEFI__)
-//NOTE: UEFIs StdLib Pkg uses <sys/time.h> for the time include
+// NOTE: UEFIs StdLib Pkg uses <sys/time.h> for the time include
+
+extern "C" {
+
+#    if defined(__GNUC__)
+#      pragma GCC diagnostic push
+#      pragma GCC diagnostic ignored "-Wpedantic"
+
+#    endif
+
 #    include <sys/time.h>
+
+#    if defined(__GNUC__)
+#      pragma GCC diagnostic pop
+#    endif
+}
 #  endif
 
 #  if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
