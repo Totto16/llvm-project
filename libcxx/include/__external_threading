@@ -21,6 +21,10 @@
 #  include <__support/uefi/nanosleep.h>
 #endif
 
+#ifndef __UEFI__
+#  error "Only supported on UEFI"
+#endif
+
 #ifndef _LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER
 #  pragma GCC system_header
 #endif

@@ -10,6 +10,10 @@
 #ifndef _LIBCPP___SUPPORT_UEFI_NANOSLEEP_H
 #define _LIBCPP___SUPPORT_UEFI_NANOSLEEP_H
 
+#ifndef __UEFI__
+#  error "Only supported on UEFI"
+#endif
+
 #include <Library/TimerLib.h>
 #include <unistd.h>
 
