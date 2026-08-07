@@ -388,6 +388,29 @@ public:
   static const mask xdigit       = _ISXDIGIT;
   static const mask blank        = _ISBLANK;
   static const mask __regex_word = 0x8000;
+#  elif defined(__UEFI__)
+  typedef unsigned int mask;
+  static const mask space        = _CW; ///< White Space
+  static const mask print        = _CS | _CG; ///< Space Characters, ' ' in C locale or < Graphic Characters
+  static const mask cntrl        = _CC; ///< Control Characters
+  static const mask upper        = _CU; ///< Uppercase Letter [A-Z]
+  static const mask lower        = _CL; ///< Lowercase Letter [a-z]
+  static const mask alpha        = _CU | _CL | _XA; /// Composite
+  static const mask digit        = _CD; ///< Digits [0-9]
+  static const mask punct        = _CP; ///< Punctuation
+  static const mask xdigit       = _CD | _CX; ///< Digits [0-9] or < Hexadecimal Digits [A-Fa-f]
+  static const mask blank        = _CB; ///< Blank Characters, ' ' and '\t' in C locale
+
+  // no clue what this is (\w ??) but we maybe need it, no clue on where it should be defined in the ctype.h of Edk2 StdLib/LibC
+  static const mask __regex_word = 0x8000;
+
+#    define _LIBCPP_CTYPE_MASK_IS_COMPOSITE_PRINT
+#    define _LIBCPP_CTYPE_MASK_IS_COMPOSITE_ALPHA
+#    define _LIBCPP_CTYPE_MASK_IS_COMPOSITE_XDIGIT
+
+
+
+
 #  elif _LIBCPP_LIBC_NEWLIB
   // Same type as Newlib's _ctype_ array in newlib/libc/include/ctype.h.
   typedef char mask;
