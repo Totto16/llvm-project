@@ -17,6 +17,10 @@
 #include <ctime>
 #include <errno.h>
 
+#ifdef __UEFI__
+#  include <__support/uefi/nanosleep.h>
+#endif
+
 #ifndef _LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER
 #  pragma GCC system_header
 #endif
@@ -91,7 +95,6 @@ inline _LIBCPP_HIDE_FROM_ABI int __libcpp_mutex_destroy(__libcpp_mutex_t* __m) {
 #endif
 
 #if _LIBCPP_HAS_THREAD_API_EXTERNAL_CONDVAR
-#  error "TODO"
 
 //
 // Condition Variable
