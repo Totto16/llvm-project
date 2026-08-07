@@ -43,6 +43,8 @@ int toupper(int c);
 #  include_next <ctype.h>
 #endif
 
+#include <__support/uefi/ctype>
+
 #ifdef __cplusplus
 
 #  undef isalnum

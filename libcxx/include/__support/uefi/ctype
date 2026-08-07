@@ -1,0 +1,40 @@
+// -*- C++ -*-
+//===----------------------------------------------------------------------===//
+//
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//===----------------------------------------------------------------------===//
+
+#ifndef _LIBCPP___SUPPORT_UEFI_CTYPE_H
+#define _LIBCPP___SUPPORT_UEFI_CTYPE_H
+
+
+#ifndef __UEFI__
+#  error "Only supported on UEFI"
+#endif
+
+#include <__support/uefi/locale_t>
+
+int isalpha_l(int c, locale_t loc) {
+  (void)loc;
+  return isalpha(c);
+}
+
+int isdigit_l(int c, locale_t loc) {
+  (void)loc;
+  return isdigit(c);
+}
+
+int toupper_l(int c, locale_t loc) {
+  (void)loc;
+  return toupper(c);
+}
+
+int tolower_l(int c, locale_t loc) {
+  (void)loc;
+  return tolower(c);
+}
+
+#endif // _LIBCPP___SUPPORT_UEFI_CTYPE_H
