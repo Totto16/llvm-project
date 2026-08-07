@@ -116,6 +116,8 @@
 #    include <__locale_dir/support/windows.h>
 #  elif defined(__Fuchsia__)
 #    include <__locale_dir/support/fuchsia.h>
+#  elif defined(__UEFI__)
+#    include <__locale_dir/support/uefi.h>
 #  elif defined(__linux__)
 #    include <__locale_dir/support/linux.h>
 #  elif _LIBCPP_LIBC_NEWLIB

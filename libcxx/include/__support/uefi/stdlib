@@ -1,0 +1,36 @@
+// -*- C++ -*-
+//===----------------------------------------------------------------------===//
+//
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//===----------------------------------------------------------------------===//
+
+#ifndef _LIBCPP___SUPPORT_UEFI_STDLIB_H
+#define _LIBCPP___SUPPORT_UEFI_STDLIB_H
+
+
+#ifndef __UEFI__
+#  error "Only supported on UEFI"
+#endif
+
+#include <__support/uefi/locale_t>
+
+inline float strtof_l(const char* __nptr, char** __endptr, locale_t)
+{
+    return strtof(__nptr, __endptr);
+}
+
+inline double strtod_l(const char* __nptr, char** __endptr, locale_t)
+{
+    return strtod(__nptr, __endptr);
+}
+
+inline long double strtold_l(const char* __nptr, char** __endptr, locale_t)
+{
+    return strtold(__nptr, __endptr);
+}
+
+
+#endif // _LIBCPP___SUPPORT_UEFI_STDLIB_H

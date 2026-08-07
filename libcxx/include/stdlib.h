@@ -89,6 +89,8 @@ void *aligned_alloc(size_t alignment, size_t size);                       // C11
 #    include_next <stdlib.h>
 #  endif
 
+#include <__support/uefi/stdlib>
+
 #  if !defined(_LIBCPP_STDLIB_H)
 #    define _LIBCPP_STDLIB_H
 
