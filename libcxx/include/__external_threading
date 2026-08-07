@@ -17,11 +17,6 @@
 #include <ctime>
 #include <errno.h>
 
-#ifdef __MVS__
-#  include <__support/ibm/nanosleep.h>
-#endif
-
-
 #ifndef _LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER
 #  pragma GCC system_header
 #endif
@@ -39,7 +34,7 @@ struct __libcpp_mutex_t {
   bool __dummy;
 };
 
-#define _LIBCPP_MUTEX_INITIALIZER {0}
+#  define _LIBCPP_MUTEX_INITIALIZER {0}
 
 struct __libcpp_recursive_mutex_t {
   bool __dummy;
@@ -96,7 +91,7 @@ inline _LIBCPP_HIDE_FROM_ABI int __libcpp_mutex_destroy(__libcpp_mutex_t* __m) {
 #endif
 
 #if _LIBCPP_HAS_THREAD_API_EXTERNAL_CONDVAR
-#error "TODO"
+#  error "TODO"
 
 //
 // Condition Variable
@@ -105,7 +100,7 @@ struct __libcpp_condvar_t {
   bool __dummy;
 };
 
-#define _LIBCPP_CONDVAR_INITIALIZER {0}
+#  define _LIBCPP_CONDVAR_INITIALIZER {0}
 
 inline _LIBCPP_HIDE_FROM_ABI int __libcpp_condvar_signal(__libcpp_condvar_t* __cv) {
   (void)__cv;
@@ -140,13 +135,13 @@ inline _LIBCPP_HIDE_FROM_ABI int __libcpp_condvar_destroy(__libcpp_condvar_t* __
 #endif
 
 #if _LIBCPP_HAS_THREAD_API_EXTERNAL_EXECONCE
-#error "TODO"
+#  error "TODO"
 
 //
 // Execute once
 //
 typedef pthread_once_t __libcpp_exec_once_flag;
-#define _LIBCPP_EXEC_ONCE_INITIALIZER PTHREAD_ONCE_INIT
+#  define _LIBCPP_EXEC_ONCE_INITIALIZER PTHREAD_ONCE_INIT
 
 inline _LIBCPP_HIDE_FROM_ABI int __libcpp_execute_once(__libcpp_exec_once_flag* __flag, void (*__init_routine)()) {
   return pthread_once(__flag, __init_routine);
@@ -154,17 +149,12 @@ inline _LIBCPP_HIDE_FROM_ABI int __libcpp_execute_once(__libcpp_exec_once_flag* 
 
 #endif
 
-#if _LIBCPP_HAS_THREAD_API_EXTERNAL_THREADID
-#error "TODO"
+#if _LIBCPP_HAS_THREAD_API_EXTERNAL_THREAD
 
 //
 // Thread id
 //
-#if defined(__MVS__)
-typedef unsigned long long __libcpp_thread_id;
-#else
-typedef pthread_t __libcpp_thread_id;
-#endif
+typedef uint64_t __libcpp_thread_id;
 
 // Returns non-zero if the thread ids are equal, otherwise 0
 inline _LIBCPP_HIDE_FROM_ABI bool __libcpp_thread_id_equal(__libcpp_thread_id __t1, __libcpp_thread_id __t2) {
@@ -176,23 +166,19 @@ inline _LIBCPP_HIDE_FROM_ABI bool __libcpp_thread_id_less(__libcpp_thread_id __t
   return __t1 < __t2;
 }
 
-#endif
-
-#if _LIBCPP_HAS_THREAD_API_EXTERNAL_THREAD
-#error "TODO"
-
 //
 // Thread
 //
-#define _LIBCPP_NULL_THREAD ((__libcpp_thread_t()))
-typedef pthread_t __libcpp_thread_t;
+#  define _LIBCPP_NULL_THREAD ((__libcpp_thread_t()))
+
+struct __libcpp_thread_t {
+  bool __dummy;
+};
 
 inline _LIBCPP_HIDE_FROM_ABI __libcpp_thread_id __libcpp_thread_get_id(const __libcpp_thread_t* __t) {
-#if defined(__MVS__)
-  return __t->__;
-#else
-  return *__t;
-#endif
+  // we only have one thread, so just return a number, preferably not 0 :) xD
+  (void)__t;
+  return 69;
 }
 
 inline _LIBCPP_HIDE_FROM_ABI bool __libcpp_thread_isnull(const __libcpp_thread_t* __t) {
@@ -200,19 +186,30 @@ inline _LIBCPP_HIDE_FROM_ABI bool __libcpp_thread_isnull(const __libcpp_thread_t
 }
 
 inline _LIBCPP_HIDE_FROM_ABI int __libcpp_thread_create(__libcpp_thread_t* __t, void* (*__func)(void*), void* __arg) {
-  return pthread_create(__t, nullptr, __func, __arg);
+  (void)__t;
+  (void)__func;
+  (void)__arg;
+  return ENOTSUP;
 }
 
 inline _LIBCPP_HIDE_FROM_ABI __libcpp_thread_id __libcpp_thread_get_current_id() {
-  const __libcpp_thread_t __current_thread = pthread_self();
-  return __libcpp_thread_get_id(&__current_thread);
+  // wre are always in the only thread
+  return __libcpp_thread_get_id(nullptr);
 }
 
-inline _LIBCPP_HIDE_FROM_ABI int __libcpp_thread_join(__libcpp_thread_t* __t) { return pthread_join(*__t, nullptr); }
+inline _LIBCPP_HIDE_FROM_ABI int __libcpp_thread_join(__libcpp_thread_t* __t) {
+  (void)__t;
+  return ENOTSUP;
+}
 
-inline _LIBCPP_HIDE_FROM_ABI int __libcpp_thread_detach(__libcpp_thread_t* __t) { return pthread_detach(*__t); }
+inline _LIBCPP_HIDE_FROM_ABI int __libcpp_thread_detach(__libcpp_thread_t* __t) {
+  (void)__t;
+  return ENOTSUP;
+}
 
-inline _LIBCPP_HIDE_FROM_ABI void __libcpp_thread_yield() { sched_yield(); }
+inline _LIBCPP_HIDE_FROM_ABI void __libcpp_thread_yield() {
+  // no-op in single-threaded UEFI
+}
 
 inline _LIBCPP_HIDE_FROM_ABI void __libcpp_thread_sleep_for(const chrono::nanoseconds& __ns) {
   __libcpp_timespec_t __ts = std::__convert_to_timespec<__libcpp_timespec_t>(__ns);
@@ -223,12 +220,12 @@ inline _LIBCPP_HIDE_FROM_ABI void __libcpp_thread_sleep_for(const chrono::nanose
 #endif
 
 #if _LIBCPP_HAS_THREAD_API_EXTERNAL_THREAD_LOCAL_STORAGE
-#error "TODO"
+#  error "TODO"
 
 //
 // Thread local storage
 //
-#define _LIBCPP_TLS_DESTRUCTOR_CC /* nothing */
+#  define _LIBCPP_TLS_DESTRUCTOR_CC /* nothing */
 
 typedef pthread_key_t __libcpp_tls_key;
 
