@@ -97,59 +97,57 @@ inline _LIBCPP_HIDE_FROM_ABI long double __strtold(const char* __nptr, char** __
 // Character manipulation functions
 //
 #if defined(_LIBCPP_BUILDING_LIBRARY)
-inline _LIBCPP_HIDE_FROM_ABI int __toupper(int __c, __locale_t __loc) { return toupper_l(__c, __loc); }
+inline _LIBCPP_HIDE_FROM_ABI int __toupper(int __c, __locale_t) { return toupper(__c); }
 
-inline _LIBCPP_HIDE_FROM_ABI int __tolower(int __c, __locale_t __loc) { return tolower_l(__c, __loc); }
+inline _LIBCPP_HIDE_FROM_ABI int __tolower(int __c, __locale_t) { return tolower(__c); }
 
-inline _LIBCPP_HIDE_FROM_ABI int __strcoll(const char* __s1, const char* __s2, __locale_t __loc) {
-  return strcoll_l(__s1, __s2, __loc);
+inline _LIBCPP_HIDE_FROM_ABI int __strcoll(const char* __s1, const char* __s2, __locale_t) {
+  return strcoll(__s1, __s2);
 }
 
-inline _LIBCPP_HIDE_FROM_ABI size_t __strxfrm(char* __dest, const char* __src, size_t __n, __locale_t __loc) {
-  return strxfrm_l(__dest, __src, __n, __loc);
+inline _LIBCPP_HIDE_FROM_ABI size_t __strxfrm(char* __dest, const char* __src, size_t __n, __locale_t) {
+  return strxfrm(__dest, __src, __n);
 }
 
 #  if _LIBCPP_HAS_WIDE_CHARACTERS
-inline _LIBCPP_HIDE_FROM_ABI int __iswctype(wint_t __c, wctype_t __type, __locale_t __loc) {
-  return iswctype_l(__c, __type, __loc);
+inline _LIBCPP_HIDE_FROM_ABI int __iswctype(wint_t __c, wctype_t __type, __locale_t) { return iswctype(__c, __type); }
+
+inline _LIBCPP_HIDE_FROM_ABI int __iswspace(wint_t __c, __locale_t) { return iswspace(__c); }
+
+inline _LIBCPP_HIDE_FROM_ABI int __iswprint(wint_t __c, __locale_t) { return iswprint(__c); }
+
+inline _LIBCPP_HIDE_FROM_ABI int __iswcntrl(wint_t __c, __locale_t) { return iswcntrl(__c); }
+
+inline _LIBCPP_HIDE_FROM_ABI int __iswupper(wint_t __c, __locale_t) { return iswupper(__c); }
+
+inline _LIBCPP_HIDE_FROM_ABI int __iswlower(wint_t __c, __locale_t) { return iswlower(__c); }
+
+inline _LIBCPP_HIDE_FROM_ABI int __iswalpha(wint_t __c, __locale_t) { return iswalpha(__c); }
+
+inline _LIBCPP_HIDE_FROM_ABI int __iswblank(wint_t __c, __locale_t) { return iswblank(__c); }
+
+inline _LIBCPP_HIDE_FROM_ABI int __iswdigit(wint_t __c, __locale_t) { return iswdigit(__c); }
+
+inline _LIBCPP_HIDE_FROM_ABI int __iswpunct(wint_t __c, __locale_t) { return iswpunct(__c); }
+
+inline _LIBCPP_HIDE_FROM_ABI int __iswxdigit(wint_t __c, __locale_t) { return iswxdigit(__c); }
+
+inline _LIBCPP_HIDE_FROM_ABI wint_t __towupper(wint_t __c, __locale_t) { return towupper(__c); }
+
+inline _LIBCPP_HIDE_FROM_ABI wint_t __towlower(wint_t __c, __locale_t) { return towlower(__c); }
+
+inline _LIBCPP_HIDE_FROM_ABI int __wcscoll(const wchar_t* __ws1, const wchar_t* __ws2, __locale_t) {
+  return wcscoll(__ws1, __ws2);
 }
 
-inline _LIBCPP_HIDE_FROM_ABI int __iswspace(wint_t __c, __locale_t __loc) { return iswspace_l(__c, __loc); }
-
-inline _LIBCPP_HIDE_FROM_ABI int __iswprint(wint_t __c, __locale_t __loc) { return iswprint_l(__c, __loc); }
-
-inline _LIBCPP_HIDE_FROM_ABI int __iswcntrl(wint_t __c, __locale_t __loc) { return iswcntrl_l(__c, __loc); }
-
-inline _LIBCPP_HIDE_FROM_ABI int __iswupper(wint_t __c, __locale_t __loc) { return iswupper_l(__c, __loc); }
-
-inline _LIBCPP_HIDE_FROM_ABI int __iswlower(wint_t __c, __locale_t __loc) { return iswlower_l(__c, __loc); }
-
-inline _LIBCPP_HIDE_FROM_ABI int __iswalpha(wint_t __c, __locale_t __loc) { return iswalpha_l(__c, __loc); }
-
-inline _LIBCPP_HIDE_FROM_ABI int __iswblank(wint_t __c, __locale_t __loc) { return iswblank_l(__c, __loc); }
-
-inline _LIBCPP_HIDE_FROM_ABI int __iswdigit(wint_t __c, __locale_t __loc) { return iswdigit_l(__c, __loc); }
-
-inline _LIBCPP_HIDE_FROM_ABI int __iswpunct(wint_t __c, __locale_t __loc) { return iswpunct_l(__c, __loc); }
-
-inline _LIBCPP_HIDE_FROM_ABI int __iswxdigit(wint_t __c, __locale_t __loc) { return iswxdigit_l(__c, __loc); }
-
-inline _LIBCPP_HIDE_FROM_ABI wint_t __towupper(wint_t __c, __locale_t __loc) { return towupper_l(__c, __loc); }
-
-inline _LIBCPP_HIDE_FROM_ABI wint_t __towlower(wint_t __c, __locale_t __loc) { return towlower_l(__c, __loc); }
-
-inline _LIBCPP_HIDE_FROM_ABI int __wcscoll(const wchar_t* __ws1, const wchar_t* __ws2, __locale_t __loc) {
-  return wcscoll_l(__ws1, __ws2, __loc);
-}
-
-inline _LIBCPP_HIDE_FROM_ABI size_t __wcsxfrm(wchar_t* __dest, const wchar_t* __src, size_t __n, __locale_t __loc) {
-  return wcsxfrm_l(__dest, __src, __n, __loc);
+inline _LIBCPP_HIDE_FROM_ABI size_t __wcsxfrm(wchar_t* __dest, const wchar_t* __src, size_t __n, __locale_t) {
+  return wcsxfrm(__dest, __src, __n);
 }
 #  endif // _LIBCPP_HAS_WIDE_CHARACTERS
 
 inline _LIBCPP_HIDE_FROM_ABI
-size_t __strftime(char* __s, size_t __max, const char* __format, const struct tm* __tm, __locale_t __loc) {
-  return strftime_l(__s, __max, __format, __tm, __loc);
+size_t __strftime(char* __s, size_t __max, const char* __format, const struct tm* __tm, __locale_t) {
+  return strftime(__s, __max, __format, __tm);
 }
 
 //
@@ -171,25 +169,29 @@ inline _LIBCPP_HIDE_FROM_ABI int __wctob(wint_t __c, __locale_t __loc) {
   return std::wctob(__c);
 }
 
+#    if !defined(__UEFI__)
 inline _LIBCPP_HIDE_FROM_ABI size_t
 __wcsnrtombs(char* __dest, const wchar_t** __src, size_t __nwc, size_t __len, mbstate_t* __ps, __locale_t __loc) {
   __locale_guard __current(__loc);
   return ::wcsnrtombs(__dest, __src, __nwc, __len, __ps); // non-standard
 }
+#    endif
 
 inline _LIBCPP_HIDE_FROM_ABI size_t __wcrtomb(char* __s, wchar_t __wc, mbstate_t* __ps, __locale_t __loc) {
   __locale_guard __current(__loc);
   return std::wcrtomb(__s, __wc, __ps);
 }
 
+#    if !defined(__UEFI__)
 inline _LIBCPP_HIDE_FROM_ABI size_t
 __mbsnrtowcs(wchar_t* __dest, const char** __src, size_t __nms, size_t __len, mbstate_t* __ps, __locale_t __loc) {
   __locale_guard __current(__loc);
   return ::mbsnrtowcs(__dest, __src, __nms, __len, __ps); // non-standard
 }
+#    endif
 
-inline _LIBCPP_HIDE_FROM_ABI size_t
-__mbrtowc(wchar_t* __pwc, const char* __s, size_t __n, mbstate_t* __ps, __locale_t __loc) {
+inline _LIBCPP_HIDE_FROM_ABI
+size_t __mbrtowc(wchar_t* __pwc, const char* __s, size_t __n, mbstate_t* __ps, __locale_t __loc) {
   __locale_guard __current(__loc);
   return std::mbrtowc(__pwc, __s, __n, __ps);
 }

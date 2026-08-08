@@ -75,7 +75,8 @@
   *_*_*_CC_FLAGS = -I$(WORKSPACE)/StdLib/Include
   *_*_*_CXX_FLAGS = -I$(WORKSPACE)/LibCXX/include
 
-    *_*_*_CC_FLAGS = -Wno-attributes
+  *_*_*_CC_FLAGS = -Wno-attributes
+  *_*_*_CC_FLAGS = -D_LIBCPP_BUILDING_LIBRARY
 
  #TODO: symlink this!
   *_*_*_CC_FLAGS = -I/home/totto/Code/coder2k/oopetris_pr5/toolchains/llvm-project/libc
