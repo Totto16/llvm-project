@@ -1,0 +1,33 @@
+[Defines]
+  INF_VERSION = 1.25
+  BASE_NAME = LibCXXLib
+  FILE_GUID = a89c3961-0475-4676-8e98-114eae3c1fe1
+  MODULE_TYPE = BASE
+  VERSION_STRING = 22.1.8
+  LIBRARY_CLASS = LibCXX|UEFI_APPLICATION 
+
+[Sources]
+  src/any.cpp
+
+[Packages]
+  MdePkg/MdePkg.dec
+
+[LibraryClasses]
+  UefiLib
+  LibC
+
+[BuildOptions]
+  *_*_*_CXX_FLAGS  = -std=c++23
+
+  *_*_*_CC_FLAGS = -D__UEFI__
+  *_*_*_CC_FLAGS = "-DEFIAPI=__attribute__((ms_abi))"
+  
+  *_*_*_CC_FLAGS = -fvisibility=hidden
+  *_*_*_CXX_FLAGS = -D_REENTRANT
+  *_*_*_CXX_FLAGS = -I$(MODULE_DIR)/include
+
+  *_*_*_CC_FLAGS = -I$(WORKSPACE)/StdLib/Include
+  *_*_*_CXX_FLAGS = -I$(WORKSPACE)/LibCXX/include
+
+[BuildOptions.X64]
+  *_*_*_CC_FLAGS = -I$(WORKSPACE)/StdLib/Include/X64
