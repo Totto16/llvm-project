@@ -54,6 +54,8 @@
   src/verbose_abort.cpp
 
   src/__support/uefi/clock.c
+  src/support/uefi/mbsnrtowcs.cpp
+  src/support/uefi/wcsnrtombs.cpp
 
 [Packages]
   MdePkg/MdePkg.dec
