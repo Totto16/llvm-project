@@ -156,6 +156,11 @@ Types:
 #  define __STDC_CONSTANT_MACROS
 #endif
 
+#if defined(__UEFI__)
+#include  <machine/int_limits.h>
+#include  <machine/int_const.h>
+#endif
+
 #  if __has_include(<stdint.h>)
 #    include <stdint.h>
 #  endif
