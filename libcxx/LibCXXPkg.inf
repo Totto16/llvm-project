@@ -85,8 +85,7 @@
   *_*_*_CC_FLAGS = -D_LIBCPP_BUILDING_LIBRARY
   *_*_*_CC_FLAGS = -fshort-wchar
 
- #TODO: symlink this!
-  *_*_*_CC_FLAGS = -I$(WORKSPACE)/LLVM-LibC
+  *_*_*_CC_FLAGS = -I$(WORKSPACE)/LLVM/libc
 
 [BuildOptions.X64]
   *_*_*_CC_FLAGS = -I$(WORKSPACE)/StdLib/Include/X64

@@ -1,0 +1,40 @@
+[Defines]
+  INF_VERSION = 1.25
+  BASE_NAME = LibCXXABILib
+  FILE_GUID = fac525d4-f55d-4a3d-85b7-5a5a3d8d348a
+  MODULE_TYPE = BASE
+  VERSION_STRING = 22.1.8
+  LIBRARY_CLASS = LibCXXABI|UEFI_APPLICATION 
+
+[Sources]
+  src/abort_message.cpp
+
+[Packages]
+  MdePkg/MdePkg.dec
+
+[LibraryClasses]
+  UefiLib
+  LibC
+  LibCXX
+
+[BuildOptions]
+  *_*_*_CXX_FLAGS  = -std=c++23
+
+  *_*_*_CC_FLAGS = -D__UEFI__
+  *_*_*_CC_FLAGS = "-DEFIAPI=__attribute__((ms_abi))"
+  
+  *_*_*_CC_FLAGS = -fvisibility=hidden
+  *_*_*_CXX_FLAGS = -D_REENTRANT
+  *_*_*_CXX_FLAGS = -I$(MODULE_DIR)/include
+
+  *_*_*_CC_FLAGS = -I$(WORKSPACE)/StdLib/Include
+  *_*_*_CXX_FLAGS = -I$(WORKSPACE)/LLVM/libcxx/include
+
+  *_*_*_CC_FLAGS = -Wno-attributes
+  *_*_*_CC_FLAGS = -D_LIBCPP_BUILDING_LIBRARY
+  *_*_*_CC_FLAGS = -fshort-wchar
+
+  *_*_*_CC_FLAGS = -I$(WORKSPACE)/LLVM/libc
+
+[BuildOptions.X64]
+  *_*_*_CC_FLAGS = -I$(WORKSPACE)/StdLib/Include/X64

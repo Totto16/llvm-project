@@ -1,0 +1,13 @@
+[Defines]
+  DEC_SPECIFICATION   = 1.25
+  PACKAGE_NAME                   = LLVMLib
+  PACKAGE_GUID                   = 7c527429-2a06-47b1-b4ec-8f83a557a59e
+  PACKAGE_VERSION                = 22.1.8
+
+[Includes]
+  libcxx/include/
+  libcxxabi/include/
+
+
+[LibraryClasses]
+  ##TODO
