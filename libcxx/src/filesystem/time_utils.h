@@ -19,6 +19,10 @@
 #include <type_traits>
 #include <utility>
 
+#if defined(__UEFI__)
+#  include <utime.h>
+#endif
+
 #include "error.h"
 #include "format_string.h"
 
@@ -276,13 +280,13 @@ using fs_time = time_util<file_time_type, time_t, TimeSpec>;
 #if defined(__APPLE__)
 inline TimeSpec extract_mtime(StatT const& st) { return st.st_mtimespec; }
 inline TimeSpec extract_atime(StatT const& st) { return st.st_atimespec; }
-#elif defined(__MVS__)
+#elif defined(__MVS__) || defined(__UEFI__)
 inline TimeSpec extract_mtime(StatT const& st) {
-  TimeSpec TS = {st.st_mtime, 0};
+  TimeSpec TS = {(int)st.st_mtime, 0};
   return TS;
 }
 inline TimeSpec extract_atime(StatT const& st) {
-  TimeSpec TS = {st.st_atime, 0};
+  TimeSpec TS = {(int)st.st_atime, 0};
   return TS;
 }
 #elif defined(_AIX)
