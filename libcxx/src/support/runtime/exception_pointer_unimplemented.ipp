@@ -39,6 +39,7 @@ exception_ptr& exception_ptr::operator=(const exception_ptr& other) noexcept {
 #  if _LIBCPP_HAS_EXCEPTIONS
 #    error "EXCEPTIONS SHOULD BE DISABLED"
 #  endif
+  return *this;
 #else
 #  warning exception_ptr not yet implemented
   __libcpp_verbose_abort("exception_ptr not yet implemented\n");
@@ -50,6 +51,7 @@ exception_ptr exception_ptr::__from_native_exception_pointer(void* __e) noexcept
 #  if _LIBCPP_HAS_EXCEPTIONS
 #    error "EXCEPTIONS SHOULD BE DISABLED"
 #  endif
+  return exception_ptr{};
 #else
 #  warning exception_ptr not yet implemented
   __libcpp_verbose_abort("exception_ptr not yet implemented\n");
@@ -83,6 +85,7 @@ exception_ptr current_exception() noexcept {
 #  if _LIBCPP_HAS_EXCEPTIONS
 #    error "EXCEPTIONS SHOULD BE DISABLED"
 #  endif
+  return exception_ptr{};
 #else
 #  warning exception_ptr not yet implemented
   __libcpp_verbose_abort("exception_ptr not yet implemented\n");
