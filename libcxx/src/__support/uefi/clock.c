@@ -1,11 +1,10 @@
-
-#include "./clock.h"
+#include "__support/uefi/clock.h"
 
 #include <errno.h>
 
 #include <Library/BaseLib.h>
-#include <Library/TimerLib.h>
 #include <Library/BaseMemoryLib.h>
+#include <Library/TimerLib.h>
 #include <Uefi.h>
 
 static EFI_STATUS ClockGetTimeMonotonic(OUT struct timespec* Ts) {

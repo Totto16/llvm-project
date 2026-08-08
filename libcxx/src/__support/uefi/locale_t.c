@@ -1,5 +1,5 @@
 
-#include "__support/uefi/locale_t"
+#include "__support/uefi/locale_t.h"
 
 static struct __uefi_locale __uefi_C_locale_storage;
 locale_t __uefi_C_locale = &__uefi_C_locale_storage;

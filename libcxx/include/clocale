@@ -39,7 +39,7 @@ lconv* localeconv();
 #else
 #  include <__config>
 
-#include <__support/uefi/locale_t>
+#include <__support/uefi/locale_t.h>
 
 #  if __has_include(<locale.h>)
 #    include <locale.h>

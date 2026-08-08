@@ -10,31 +10,26 @@
 #ifndef _LIBCPP___SUPPORT_UEFI_CTYPE_H
 #define _LIBCPP___SUPPORT_UEFI_CTYPE_H
 
-
 #ifndef __UEFI__
 #  error "Only supported on UEFI"
 #endif
 
-#include <__support/uefi/locale_t>
+#include <__support/uefi/locale_t.h>
 
-int isalpha_l(int c, locale_t loc) {
-  (void)loc;
-  return isalpha(c);
-}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-int isdigit_l(int c, locale_t loc) {
-  (void)loc;
-  return isdigit(c);
-}
+int isalpha_l(int c, locale_t loc);
 
-int toupper_l(int c, locale_t loc) {
-  (void)loc;
-  return toupper(c);
-}
+int isdigit_l(int c, locale_t loc);
 
-int tolower_l(int c, locale_t loc) {
-  (void)loc;
-  return tolower(c);
+int toupper_l(int c, locale_t loc);
+
+int tolower_l(int c, locale_t loc);
+
+#ifdef __cplusplus
 }
+#endif
 
 #endif // _LIBCPP___SUPPORT_UEFI_CTYPE_H

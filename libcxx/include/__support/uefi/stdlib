@@ -15,7 +15,7 @@
 #  error "Only supported on UEFI"
 #endif
 
-#include <__support/uefi/locale_t>
+#include <__support/uefi/locale_t.h>
 
 inline float strtof_l(const char* __nptr, char** __endptr, locale_t)
 {

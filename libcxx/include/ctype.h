@@ -43,7 +43,7 @@ int toupper(int c);
 #  include_next <ctype.h>
 #endif
 
-#include <__support/uefi/ctype>
+#include <__support/uefi/ctype.h>
 
 #ifdef __cplusplus
 

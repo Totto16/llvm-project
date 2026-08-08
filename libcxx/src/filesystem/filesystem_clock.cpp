@@ -49,9 +49,9 @@ const bool _FilesystemClock::is_steady;
 _LIBCPP_DIAGNOSTIC_POP
 
 #if defined(__UEFI__)
-extern "C" {
-#  include "../__support/uefi/clock.h"
-}
+
+#  include "__support/uefi/clock.h"
+
 #endif
 
 _FilesystemClock::time_point _FilesystemClock::now() noexcept {

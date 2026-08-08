@@ -14,27 +14,18 @@
 #  error "Only supported on UEFI"
 #endif
 
-#include <Library/TimerLib.h>
 #include <unistd.h>
+#include <time.h>
+#include <sys/time.h>
 
-inline int nanosleep(const struct timespec* __req, struct timespec* __rem) {
-  // The nanosleep() function is not available on uefi. Therefore, we will call
-  // NanoSecondDelay
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-  if (__req == nullptr) {
-    return -1;
-  }
+int nanosleep(const struct timespec* __req, struct timespec* __rem);
 
-  UINT64 ns = (UINT64)__req->tv_sec * 1000000000ULL + (UINT64)__req->tv_nsec;
-
-  NanoSecondDelay(ns);
-
-  if (__rem != nullptr) {
-    __rem->tv_sec  = 0;
-    __rem->tv_nsec = 0;
-  }
-
-  return 0;
+#ifdef __cplusplus
 }
+#endif
 
 #endif // _LIBCPP___SUPPORT_UEFI_NANOSLEEP_H
