@@ -79,7 +79,6 @@
   *_*_*_CXX_FLAGS = -I$(MODULE_DIR)/include
 
   *_*_*_CC_FLAGS = -I$(WORKSPACE)/StdLib/Include
-  *_*_*_CXX_FLAGS = -I$(WORKSPACE)/LibCXX/include
 
   *_*_*_CC_FLAGS = -Wno-attributes
   *_*_*_CC_FLAGS = -D_LIBCPP_BUILDING_LIBRARY
