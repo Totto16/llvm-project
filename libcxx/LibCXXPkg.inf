@@ -82,7 +82,7 @@
   *_*_*_CC_FLAGS = -fshort-wchar
 
  #TODO: symlink this!
-  *_*_*_CC_FLAGS = -I/home/totto/Code/coder2k/oopetris_pr5/toolchains/llvm-project/libc
+  *_*_*_CC_FLAGS = -I$(WORKSPACE)/LLVM-LibC
 
 [BuildOptions.X64]
   *_*_*_CC_FLAGS = -I$(WORKSPACE)/StdLib/Include/X64
