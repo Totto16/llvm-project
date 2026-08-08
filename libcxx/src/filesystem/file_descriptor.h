@@ -146,6 +146,10 @@ inline perms get_file_perm(const WIN32_FIND_DATAW& data) {
 
 #endif // !_LIBCPP_WIN32API
 
+#if defined(__UEFI__)
+static inline int open_helper(const char* Path, int oflags) { return open(Path, oflags, 0); }
+static inline int open_helper(const char* Path, int oflags, int mode) { return open(Path, oflags, mode); }
+#endif
 //                       POSIX HELPERS
 
 using value_type  = path::value_type;
@@ -175,6 +179,8 @@ struct FileDescriptor {
     // works on paths, not open files -- at which point this FileDescriptor type
     // will no longer be needed on windows at all.
     fd = ::_wopen(p->c_str(), args...);
+#elif defined(__UEFI__)
+    fd = open_helper(p->c_str(), args...);
 #else
     fd = open(p->c_str(), args...);
 #endif

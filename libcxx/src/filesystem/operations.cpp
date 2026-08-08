@@ -33,7 +33,9 @@
 #else
 #  include <dirent.h>
 #  include <sys/stat.h>
-#  include <sys/statvfs.h>
+#  if !defined(__UEFI__)
+#    include <sys/statvfs.h>
+#  endif
 #  include <sys/types.h>
 #  include <unistd.h>
 #endif
@@ -439,9 +441,13 @@ bool __copy_file(const path& from, const path& to, copy_options options, error_c
     if (!detail::stat_equivalent(to_stat_path, to_fd.get_stat()))
       return err.report(errc::bad_file_descriptor);
 
-    // Set the permissions and truncate the file we opened.
+// Set the permissions and truncate the file we opened.
+#if defined(__UEFI__)
+    return err.report(errc::operation_not_supported);
+#else
     if (detail::posix_fchmod(to_fd, from_stat, m_ec))
       return err.report(m_ec);
+#endif
     if (detail::posix_ftruncate(to_fd, 0, m_ec))
       return err.report(m_ec);
   }
@@ -542,6 +548,7 @@ bool __create_directory(path const& p, path const& attributes, error_code* ec) {
   return false;
 }
 
+#if !defined(__UEFI__)
 void __create_directory_symlink(path const& from, path const& to, error_code* ec) {
   ErrorHandler<void> err("create_directory_symlink", ec, &from, &to);
   if (detail::symlink_dir(from.c_str(), to.c_str()) == -1)
@@ -559,6 +566,7 @@ void __create_symlink(path const& from, path const& to, error_code* ec) {
   if (detail::symlink_file(from.c_str(), to.c_str()) == -1)
     return err.report(detail::get_last_error());
 }
+#endif
 
 path __current_path(error_code* ec) {
   ErrorHandler<path> err("current_path", ec);
@@ -571,8 +579,13 @@ path __current_path(error_code* ec) {
   typedef decltype(&::free) Deleter;
   Deleter deleter = &::free;
 #else
-  errno     = 0; // Note: POSIX mandates that modifying `errno` is thread-safe.
+
+  errno = 0; // Note: POSIX mandates that modifying `errno` is thread-safe.
+#  if !defined(__UEFI__)
   auto size = ::pathconf(".", _PC_PATH_MAX);
+#  else
+  auto size = -1;
+#  endif
   if (size == -1) {
     if (errno != 0) {
       return err.report(capture_errno(), "call to pathconf failed");
@@ -650,7 +663,11 @@ uintmax_t __hard_link_count(const path& p, error_code* ec) {
   detail::posix_stat(p, st, &m_ec);
   if (m_ec)
     return err.report(m_ec);
+#if !defined(__UEFI__)
   return static_cast<uintmax_t>(st.st_nlink);
+#else
+  return static_cast<uintmax_t>(0);
+#endif
 }
 
 bool __fs_is_empty(const path& p, error_code* ec) {
@@ -771,25 +788,29 @@ void __permissions(const path& p, perms prms, perm_options opts, error_code* ec)
 path __read_symlink(const path& p, error_code* ec) {
   ErrorHandler<path> err("read_symlink", ec, &p);
 
-#if defined(PATH_MAX) || defined(MAX_SYMLINK_SIZE)
+#if defined(__UEFI__)
+  return err.report(errc::operation_not_supported);
+#else
+
+#  if defined(PATH_MAX) || defined(MAX_SYMLINK_SIZE)
   struct NullDeleter {
     void operator()(void*) const {}
   };
-#  ifdef MAX_SYMLINK_SIZE
+#    ifdef MAX_SYMLINK_SIZE
   const size_t size = MAX_SYMLINK_SIZE + 1;
-#  else
+#    else
   const size_t size = PATH_MAX + 1;
-#  endif
+#    endif
   path::value_type stack_buff[size];
   auto buff = std::unique_ptr<path::value_type[], NullDeleter>(stack_buff);
-#else
+#  else
   StatT sb;
   if (detail::lstat(p.c_str(), &sb) == -1) {
     return err.report(detail::get_last_error());
   }
   const size_t size = sb.st_size + 1;
   auto buff         = unique_ptr<path::value_type[]>(new path::value_type[size]);
-#endif
+#  endif
   detail::SSizeT ret;
   if ((ret = detail::readlink(p.c_str(), buff.get(), size)) == -1)
     return err.report(detail::get_last_error());
@@ -798,6 +819,7 @@ path __read_symlink(const path& p, error_code* ec) {
     return err.report(errc::value_too_large);
   buff[ret] = 0;
   return {buff.get()};
+#endif
 }
 
 bool __remove(const path& p, error_code* ec) {
@@ -877,7 +899,11 @@ private:
 };
 _LIBCPP_CTAD_SUPPORTED_FOR_TYPE(scope_exit);
 
-uintmax_t remove_all_impl(int parent_directory, const path& p, error_code& ec) {
+[[maybe_unused]] uintmax_t remove_all_impl(int parent_directory, const path& p, error_code& ec) {
+#  if defined(__UEFI__)
+  ec = make_error_code(errc::operation_not_supported);
+  return 0;
+#  else
   // First, try to open the path as a directory.
   const int options = O_CLOEXEC | O_RDONLY | O_DIRECTORY | O_NOFOLLOW;
   int fd            = ::openat(parent_directory, p.c_str(), options);
@@ -940,17 +966,23 @@ uintmax_t remove_all_impl(int parent_directory, const path& p, error_code& ec) {
 
   // Otherwise, it's a real error -- we don't remove anything.
   return 0;
+#  endif
 }
 
 } // namespace
 
 uintmax_t __remove_all(const path& p, error_code* ec) {
   ErrorHandler<uintmax_t> err("remove_all", ec, &p);
+
+#  if defined(__UEFI__)
+  return err.report(errc::operation_not_supported);
+#  else
   error_code mec;
   uintmax_t count = remove_all_impl(AT_FDCWD, p, mec);
   if (mec)
     return err.report(mec);
   return count;
+#  endif
 }
 
 #endif // REMOVE_ALL_USE_DIRECTORY_ITERATOR
@@ -970,6 +1002,11 @@ void __resize_file(const path& p, uintmax_t size, error_code* ec) {
 space_info __space(const path& p, error_code* ec) {
   ErrorHandler<void> err("space", ec, &p);
   space_info si;
+
+#if defined(__UEFI__)
+  err.report(errc::operation_not_supported);
+  return si;
+#else
   detail::StatVFS m_svfs = {};
   if (detail::statvfs(p.c_str(), &m_svfs) == -1) {
     err.report(detail::get_last_error());
@@ -986,6 +1023,7 @@ space_info __space(const path& p, error_code* ec) {
   do_mult(si.free, m_svfs.f_bfree);
   do_mult(si.available, m_svfs.f_bavail);
   return si;
+#endif
 }
 
 file_status __status(const path& p, error_code* ec) { return detail::posix_stat(p, ec); }
