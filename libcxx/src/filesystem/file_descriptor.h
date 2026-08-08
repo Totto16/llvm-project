@@ -28,7 +28,9 @@
 #  include <dirent.h> // for DIR & friends
 #  include <fcntl.h>  // values for fchmodat
 #  include <sys/stat.h>
-#  include <sys/statvfs.h>
+#  if !defined(__UEFI__)
+#    include <sys/statvfs.h>
+#  endif
 #  include <unistd.h>
 #endif // defined(_LIBCPP_WIN32API)
 
@@ -39,6 +41,14 @@ namespace detail {
 #if !defined(_LIBCPP_WIN32API)
 
 #  if defined(DT_BLK)
+
+#    if defined(__UEFI__)
+
+#      define DT_DIR DT_DIRECTORY
+#      define DT_SOCK DT_SOCKET
+
+#    endif
+
 template <class DirEntT, class = decltype(DirEntT::d_type)>
 file_type get_file_type(DirEntT* ent, int) {
   switch (ent->d_type) {
@@ -48,11 +58,20 @@ file_type get_file_type(DirEntT* ent, int) {
     return file_type::character;
   case DT_DIR:
     return file_type::directory;
+#    if !defined(__UEFI__)
   case DT_FIFO:
     return file_type::fifo;
   case DT_LNK:
     return file_type::symlink;
+#    endif
+#    if defined(__UEFI__)
+  case DT_READ_ONLY:
+  case DT_HIDDEN:
+  case DT_SYSTEM:
+  case DT_RESERVED:
+#    else
   case DT_REG:
+#    endif
     return file_type::regular;
   case DT_SOCK:
     return file_type::socket;
@@ -70,8 +89,14 @@ template <class DirEntT>
 file_type get_file_type(DirEntT*, long) {
   return file_type::none;
 }
+#  if defined(__UEFI__)
+#    include "../__support/uefi/string_conversion.hpp"
 
-inline pair<string_view, file_type> posix_readdir(DIR* dir_stream, error_code& ec) {
+inline pair<string, file_type>
+#  else
+inline pair<string_view, file_type>
+#  endif
+posix_readdir(DIR* dir_stream, error_code& ec) {
   struct dirent* dir_entry_ptr = nullptr;
   errno                        = 0; // zero errno in order to detect errors
   ec.clear();
@@ -80,7 +105,15 @@ inline pair<string_view, file_type> posix_readdir(DIR* dir_stream, error_code& e
       ec = capture_errno();
     return {};
   } else {
+#  if defined(__UEFI__)
+    static_assert(sizeof(wchar_t) == sizeof(char16_t));
+
+    u16string_view name = u16string_view{(const char16_t*)dir_entry_ptr->d_name};
+    wstring name_s      = wstring{reinterpret_cast<const wchar_t*>(name.data()), name.size()};
+    return {stringToUTF8(name_s), get_file_type(dir_entry_ptr, 0)};
+#  else
     return {dir_entry_ptr->d_name, get_file_type(dir_entry_ptr, 0)};
+#  endif
   }
 }
 
@@ -212,9 +245,14 @@ inline file_status create_file_status(error_code& m_ec, path const& p, const Sta
 
   file_status fs_tmp;
   auto const mode = path_stat.st_mode;
+#if !defined(__UEFI__)
   if (S_ISLNK(mode))
     fs_tmp.type(file_type::symlink);
-  else if (S_ISREG(mode))
+  else if
+#else
+  if
+#endif
+      (S_ISREG(mode))
     fs_tmp.type(file_type::regular);
   else if (S_ISDIR(mode))
     fs_tmp.type(file_type::directory);
@@ -266,7 +304,7 @@ inline bool posix_ftruncate(const FileDescriptor& fd, off_t to_size, error_code&
   ec.clear();
   return false;
 }
-
+#if !defined(__UEFI__)
 inline bool posix_fchmod(const FileDescriptor& fd, const StatT& st, error_code& ec) {
   if (detail::fchmod(fd.fd, st.st_mode) == -1) {
     ec = get_last_error();
@@ -275,10 +313,15 @@ inline bool posix_fchmod(const FileDescriptor& fd, const StatT& st, error_code& 
   ec.clear();
   return false;
 }
+#endif
 
+#if defined(__UEFI__)
+inline bool stat_equivalent(const StatT& st1, const StatT& st2) { return true; }
+#else
 inline bool stat_equivalent(const StatT& st1, const StatT& st2) {
   return (st1.st_dev == st2.st_dev && st1.st_ino == st2.st_ino);
 }
+#endif
 
 inline file_status FileDescriptor::refresh_status(error_code& ec) {
   // FD must be open and good.

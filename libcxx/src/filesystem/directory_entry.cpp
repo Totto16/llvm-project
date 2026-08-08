@@ -58,8 +58,12 @@ error_code directory_entry::__do_refresh() noexcept {
     __data_.__size_ = static_cast<uintmax_t>(full_st.st_size);
 
   if (filesystem::exists(st)) {
-    __data_.__nlink_ = static_cast<uintmax_t>(full_st.st_nlink);
-
+    __data_.__nlink_ =
+#if defined(__UEFI__)
+        0;
+#else
+        static_cast<uintmax_t>(full_st.st_nlink);
+#endif
     // Attempt to extract the mtime, and fail if it's not representable using
     // file_time_type. For now we ignore the error, as we'll report it when
     // the value is actually used.

@@ -48,6 +48,12 @@ _LIBCPP_CLANG_DIAGNOSTIC_IGNORED("-Wdeprecated")
 const bool _FilesystemClock::is_steady;
 _LIBCPP_DIAGNOSTIC_POP
 
+#if defined(__UEFI__)
+extern "C" {
+#  include "../__support/uefi/clock.h"
+}
+#endif
+
 _FilesystemClock::time_point _FilesystemClock::now() noexcept {
   typedef chrono::duration<rep> __secs;
 #if defined(_LIBCPP_WIN32API)

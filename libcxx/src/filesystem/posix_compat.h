@@ -40,7 +40,9 @@
 #else
 #  include <fcntl.h>
 #  include <sys/stat.h>
-#  include <sys/statvfs.h>
+#  if !defined(__UEFI__)
+#    include <sys/statvfs.h>
+#  endif
 #  include <sys/time.h>
 #  include <unistd.h>
 #endif
@@ -454,25 +456,29 @@ inline SSizeT readlink(const wchar_t* path, wchar_t* ret_buf, size_t bufsize) {
 }
 
 #else
+#  if !defined(__UEFI__)
 inline int symlink_file(const char* oldname, const char* newname) { return ::symlink(oldname, newname); }
 inline int symlink_dir(const char* oldname, const char* newname) { return ::symlink(oldname, newname); }
-using ::chdir;
+
 using ::fchmod;
+using ::link;
+using ::readlink;
+using ::statvfs;
+#  endif
+
+using ::chdir;
 #  if defined(AT_SYMLINK_NOFOLLOW) && defined(AT_FDCWD)
 using ::fchmodat;
 #  endif
 using ::fstat;
 using ::ftruncate;
 using ::getcwd;
-using ::link;
 using ::lstat;
 using ::mkdir;
-using ::readlink;
 using ::realpath;
 using ::remove;
 using ::rename;
 using ::stat;
-using ::statvfs;
 using ::truncate;
 
 #  define O_BINARY 0

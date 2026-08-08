@@ -77,6 +77,7 @@
 
   *_*_*_CC_FLAGS = -Wno-attributes
   *_*_*_CC_FLAGS = -D_LIBCPP_BUILDING_LIBRARY
+  *_*_*_CC_FLAGS = -fshort-wchar
 
  #TODO: symlink this!
   *_*_*_CC_FLAGS = -I/home/totto/Code/coder2k/oopetris_pr5/toolchains/llvm-project/libc
