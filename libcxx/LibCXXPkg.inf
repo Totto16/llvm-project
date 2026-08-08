@@ -54,6 +54,7 @@
   src/verbose_abort.cpp
 
   src/__support/uefi/clock.c
+  src/__support/uefi/locale_t.c
   src/support/uefi/mbsnrtowcs.cpp
   src/support/uefi/wcsnrtombs.cpp
 

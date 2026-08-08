@@ -14,42 +14,26 @@
 #  error "Only supported on UEFI"
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct __uefi_locale {
   int dummy;
 }* locale_t;
 
 extern locale_t __uefi_C_locale;
 
-static struct __uefi_locale __uefi_C_locale_storage;
-locale_t __uefi_C_locale = &__uefi_C_locale_storage;
+locale_t newlocale(int mask, const char* locale, locale_t base);
 
-locale_t newlocale(int mask, const char* locale, locale_t base) {
-  (void)mask;
-  (void)locale;
-  (void)base;
+locale_t duplocale(locale_t loc);
 
-  return __uefi_C_locale;
+void freelocale(locale_t loc);
+
+locale_t uselocale(locale_t loc);
+#ifdef __cplusplus
 }
-
-locale_t duplocale(locale_t loc) {
-  (void)loc;
-
-  return __uefi_C_locale;
-}
-
-void freelocale(locale_t loc) { (void)loc; }
-
-static locale_t __uefi_current_locale = &__uefi_C_locale_storage;
-
-locale_t uselocale(locale_t loc) {
-  locale_t old = __uefi_current_locale;
-
-  if (loc != (locale_t)0) {
-    __uefi_current_locale = loc;
-  }
-
-  return old;
-}
+#endif
 
 #define LC_COLLATE_MASK (1 << LC_COLLATE)
 #define LC_CTYPE_MASK (1 << LC_CTYPE)
@@ -57,6 +41,6 @@ locale_t uselocale(locale_t loc) {
 #define LC_NUMERIC_MASK (1 << LC_NUMERIC)
 #define LC_TIME_MASK (1 << LC_TIME)
 #define LC_MESSAGES_MASK (1 << LC_MESSAGES)
-#define LC_ALL_MASK  (1 << LC_ALL)
+#define LC_ALL_MASK (1 << LC_ALL)
 
 #endif // _LIBCPP___SUPPORT_UEFI_LOCALE_T_H
