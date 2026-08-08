@@ -23,6 +23,12 @@
 #include "include/apple_availability.h"
 #include <time.h> // clock_gettime and CLOCK_{MONOTONIC,REALTIME,MONOTONIC_RAW}
 
+#if defined(__UEFI__)
+extern "C" {
+#  include "./__support/uefi/clock.h"
+}
+#endif
+
 #if __has_include(<unistd.h>)
 #  include <unistd.h> // _POSIX_TIMERS
 #endif
