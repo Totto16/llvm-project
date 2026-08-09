@@ -44,7 +44,7 @@
   LibCXX
 
 [BuildOptions]
-  *_*_*_CXX_FLAGS  = -std=c++23 -nostdinc++ -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables
+  *_*_*_CXX_FLAGS  = -std=c++23 -nostdinc++ -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-use-cxa-atexit
 
   *_*_*_CC_FLAGS = -D__UEFI__
   *_*_*_CC_FLAGS = "-DEFIAPI=__attribute__((ms_abi))"
