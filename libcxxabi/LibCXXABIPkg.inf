@@ -25,7 +25,7 @@
   
   *_*_*_CC_FLAGS = -fvisibility=hidden
   *_*_*_CXX_FLAGS = -D_REENTRANT
-  *_*_*_CXX_FLAGS = -I$(MODULE_DIR)/include
+  *_*_*_CC_FLAGS = -I$(MODULE_DIR)/include
 
   *_*_*_CC_FLAGS = -I$(WORKSPACE)/StdLib/Include
   *_*_*_CXX_FLAGS = -I$(WORKSPACE)/LLVM/libcxx/include
