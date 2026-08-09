@@ -438,7 +438,7 @@ typedef __char32_t char32_t;
 #    define _LIBCPP_PREFERRED_OVERLOAD __attribute__((__enable_if__(true, "")))
 #  endif
 
-#  if !defined(__SIZEOF_INT128__) || defined(_MSC_VER)
+#  if !defined(__SIZEOF_INT128__) || defined(_MSC_VER) || defined(__UEFI__)
 #    define _LIBCPP_HAS_INT128 0
 #  else
 #    define _LIBCPP_HAS_INT128 1
