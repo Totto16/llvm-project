@@ -53,16 +53,8 @@ terminate_handler get_terminate() noexcept { return __libcpp_atomic_load(&__term
 bool uncaught_exception() noexcept { return uncaught_exceptions() > 0; }
 
 int uncaught_exceptions() noexcept {
-#if defined(__UEFI__)
-#  if _LIBCPP_HAS_EXCEPTIONS
-#    error "EXCEPTIONS SHOULD BE DISABLED"
-#  endif
-// no exceptions can be uncaught, as we don't support them
-  return 0;
-#else
 #  warning uncaught_exception not yet implemented
   __libcpp_verbose_abort("uncaught_exceptions not yet implemented\n");
-#endif
 }
 
 exception::~exception() noexcept {}

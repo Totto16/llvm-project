@@ -7,7 +7,6 @@
   LIBRARY_CLASS = LibCXX|UEFI_APPLICATION 
 
 [Sources]
-  src/any.cpp
   src/algorithm.cpp
   src/any.cpp
   src/bind.cpp
@@ -69,7 +68,7 @@
   LibC
 
 [BuildOptions]
-  *_*_*_CXX_FLAGS  = -std=c++23
+  *_*_*_CXX_FLAGS  = -std=c++23 -nostdinc++ -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables
 
   *_*_*_CC_FLAGS = -D__UEFI__
   *_*_*_CC_FLAGS = "-DEFIAPI=__attribute__((ms_abi))"
@@ -81,10 +80,11 @@
   *_*_*_CC_FLAGS = -I$(WORKSPACE)/StdLib/Include
 
   *_*_*_CC_FLAGS = -Wno-attributes
-  *_*_*_CC_FLAGS = -D_LIBCPP_BUILDING_LIBRARY
+  *_*_*_CC_FLAGS = -D_LIBCPP_BUILDING_LIBRARY -DLIBCXX_BUILDING_LIBCXXABI
   *_*_*_CC_FLAGS = -fshort-wchar
 
   *_*_*_CC_FLAGS = -I$(WORKSPACE)/LLVM/libc
+  *_*_*_CXX_FLAGS = -I$(WORKSPACE)/LLVM/libcxxabi/include
 
 [BuildOptions.X64]
   *_*_*_CC_FLAGS = -I$(WORKSPACE)/StdLib/Include/X64

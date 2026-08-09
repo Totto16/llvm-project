@@ -832,8 +832,10 @@ bool __pointer_to_member_type_info::can_catch_nested(
 #endif
 
 #pragma GCC diagnostic push
+#if defined(__GNUC__) && defined(__clang__)
 // __dynamic_cast is called by the compiler, so there is no prototype
 #pragma GCC diagnostic ignored "-Wmissing-prototypes"
+#endif
 
 // __dynamic_cast
 
