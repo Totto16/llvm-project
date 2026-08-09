@@ -63,6 +63,42 @@ void thread::detach() {
     std::__throw_system_error(ec, "thread::detach failed");
 }
 
+#if defined(__UEFI__)
+extern "C" {
+#  include <Library/UefiBootServicesTableLib.h>
+#  include <Pi/PiDxeCis.h> // Needed for the definition of EFI_AP_PROCEDURE
+#  include <Protocol/MpService.h>
+#  include <Uefi.h>
+
+}
+
+UINTN GetNumberOfProcessorsWrapper() {
+  EFI_MP_SERVICES_PROTOCOL* MpServices;
+  EFI_STATUS Status;
+  UINTN NumberOfProcessors;
+  UINTN NumberOfEnabledProcessors;
+
+  if (!gBS) {
+    return 0;
+  }
+
+  Status = gBS->LocateProtocol(&gEfiMpServiceProtocolGuid, NULL, (VOID**)&MpServices);
+
+  if (EFI_ERROR(Status)) {
+    return 0;
+  }
+
+  Status = MpServices->GetNumberOfProcessors(MpServices, &NumberOfProcessors, &NumberOfEnabledProcessors);
+
+  if (EFI_ERROR(Status)) {
+    return 0;
+  }
+
+  return NumberOfEnabledProcessors;
+}
+
+#endif
+
 unsigned thread::hardware_concurrency() noexcept {
 #if defined(_SC_NPROCESSORS_ONLN)
   long result = sysconf(_SC_NPROCESSORS_ONLN);
@@ -73,6 +109,8 @@ unsigned thread::hardware_concurrency() noexcept {
   if (result < 0)
     return 0;
   return static_cast<unsigned>(result);
+#elif defined(__UEFI__)
+  return static_cast<unsigned>(GetNumberOfProcessorsWrapper());
 #elif defined(_LIBCPP_WIN32API)
   return static_cast<unsigned>(GetActiveProcessorCount(ALL_PROCESSOR_GROUPS));
 #else // defined(CTL_HW) && defined(HW_NCPU)

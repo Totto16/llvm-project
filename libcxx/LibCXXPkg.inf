@@ -62,6 +62,8 @@
 
   src/mutex.cpp
   src/mutex_destructor.cpp
+  src/thread.cpp
+  src/future.cpp
 
 [Packages]
   MdePkg/MdePkg.dec
