@@ -60,6 +60,9 @@
   src/support/uefi/mbsnrtowcs.cpp
   src/support/uefi/wcsnrtombs.cpp
 
+  src/mutex.cpp
+  src/mutex_destructor.cpp
+
 [Packages]
   MdePkg/MdePkg.dec
 
