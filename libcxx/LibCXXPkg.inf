@@ -94,3 +94,7 @@
 
 [BuildOptions.X64]
   *_*_*_CC_FLAGS = -I$(WORKSPACE)/StdLib/Include/X64
+
+
+[Protocols]
+  gEfiMpServiceProtocolGuid
