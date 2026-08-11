@@ -8,7 +8,6 @@
 
 [Sources]
 # C++ABI files
-  src/abort_message.cpp
   src/cxa_aux_runtime.cpp
   src/cxa_default_handlers.cpp
   src/cxa_demangle.cpp
@@ -37,12 +36,14 @@
 
 [Packages]
   MdePkg/MdePkg.dec
-  StdLib/StdLib.dec
   LLVM/LLVMPkg.dec
+  StdLib/StdLib.dec
 
 [LibraryClasses]
 # MdePkg
   UefiLib
+# LLVM
+  LibCXX
 # StdLib
   LibC
   LibCType
@@ -56,8 +57,7 @@
   LibUefi
   LibWchar
   LibGdtoa
-# LLVM
-  LibCXX
+
 
 [BuildOptions]
   *_*_*_CXX_FLAGS  = -std=c++23 -nostdinc++ -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-use-cxa-atexit
