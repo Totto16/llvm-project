@@ -68,10 +68,24 @@
 
 [Packages]
   MdePkg/MdePkg.dec
+  StdLib/StdLib.dec
 
 [LibraryClasses]
+# MdePkg
   UefiLib
+# StdLib
   LibC
+  LibCType
+  LibLocale
+  LibMath
+  LibSignal
+  LibStdio
+  LibStdLib
+  LibString
+  LibTime
+  LibUefi
+  LibWchar
+  LibGdtoa
 
 [BuildOptions]
   *_*_*_CXX_FLAGS  = -std=c++23 -nostdinc++ -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-use-cxa-atexit

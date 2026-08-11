@@ -37,10 +37,26 @@
 
 [Packages]
   MdePkg/MdePkg.dec
+  StdLib/StdLib.dec
+  LLVM/LLVMPkg.dec
 
 [LibraryClasses]
+# MdePkg
   UefiLib
+# StdLib
   LibC
+  LibCType
+  LibLocale
+  LibMath
+  LibSignal
+  LibStdio
+  LibStdLib
+  LibString
+  LibTime
+  LibUefi
+  LibWchar
+  LibGdtoa
+# LLVM
   LibCXX
 
 [BuildOptions]
