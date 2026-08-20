@@ -38,6 +38,7 @@
   MdePkg/MdePkg.dec
   LLVM/LLVMPkg.dec
   StdLib/StdLib.dec
+  SupportLib/SupportLib.dec
 
 [LibraryClasses]
 # MdePkg
