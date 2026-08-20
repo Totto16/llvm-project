@@ -18,7 +18,7 @@
 #include <errno.h>
 
 #ifdef __UEFI__
-#  include <__support/uefi/nanosleep.h>
+#include <UEfiTimeSupport.h>
 #endif
 
 #ifndef __UEFI__
