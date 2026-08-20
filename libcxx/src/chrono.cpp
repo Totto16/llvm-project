@@ -24,9 +24,7 @@
 #include <time.h> // clock_gettime and CLOCK_{MONOTONIC,REALTIME,MONOTONIC_RAW}
 
 #if defined(__UEFI__)
-extern "C" {
-#  include "./__support/uefi/clock.h"
-}
+#include <UEfiTimeSupport.h>
 #endif
 
 #if __has_include(<unistd.h>)

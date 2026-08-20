@@ -50,7 +50,7 @@ _LIBCPP_DIAGNOSTIC_POP
 
 #if defined(__UEFI__)
 
-#  include "__support/uefi/clock.h"
+#include <UEfiTimeSupport.h>
 
 #endif
 
