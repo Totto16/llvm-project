@@ -6,6 +6,8 @@
   VERSION_STRING = 22.1.8
   LIBRARY_CLASS = LibCXX|UEFI_APPLICATION 
 
+## TODO useCONSTRUCTOR and DESTRUCTOR for cxa-atexit and initilizations, if there are any
+
 [Sources]
   src/algorithm.cpp
   src/any.cpp
@@ -52,10 +54,8 @@
   src/vector.cpp
   src/verbose_abort.cpp
 
-  src/__support/uefi/clock.c
   src/__support/uefi/ctype.c
   src/__support/uefi/locale_t.c
-  src/__support/uefi/nanosleep.c
 
   src/support/uefi/mbsnrtowcs.cpp
   src/support/uefi/wcsnrtombs.cpp
@@ -69,6 +69,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   StdLib/StdLib.dec
+  LibraryPkg/SupportLib/SupportLib.dec
 
 [LibraryClasses]
 # MdePkg
@@ -86,6 +87,9 @@
   LibUefi
   LibWchar
   LibGdtoa
+# Support library (Common custom functionality)
+  LibUEfiSupportNanosleep
+  LibUEfiSupportClock
 
 [BuildOptions]
   *_*_*_CXX_FLAGS  = -std=c++23 -nostdinc++ -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-use-cxa-atexit
