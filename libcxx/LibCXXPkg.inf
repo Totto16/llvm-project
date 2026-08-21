@@ -6,8 +6,6 @@
   VERSION_STRING = 22.1.8
   LIBRARY_CLASS = LibCXX|UEFI_APPLICATION 
 
-## TODO useCONSTRUCTOR and DESTRUCTOR for cxa-atexit and initilizations, if there are any
-
 [Sources]
   src/algorithm.cpp
   src/any.cpp
@@ -92,7 +90,7 @@
   LibUEfiSupportClock
 
 [BuildOptions]
-  *_*_*_CXX_FLAGS  = -std=c++23 -nostdinc++ -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-use-cxa-atexit
+  *_*_*_CXX_FLAGS  = -std=c++23 -nostdinc++ -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables
 
   *_*_*_CC_FLAGS = -D__UEFI__
   *_*_*_CC_FLAGS = "-DEFIAPI=__attribute__((ms_abi))"
