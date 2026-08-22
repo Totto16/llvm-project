@@ -1,5 +1,3 @@
-
-
 #if !defined(__UEFI__)
 #  error "Only availabel in UEFI"
 #endif
@@ -10,21 +8,27 @@
 
 #include "./cxa_exit_abi.hpp"
 
+#ifdef LLIBCXXABI_USE___CXA_ATEXIT
+
 // see https://wiki.osdev.org/C%2B%2B#GCC
 // for some reference, and some snippets I used, but modified heavily
 
-atexit_func_entry_t __cxa_atexit_funcs[atexit_max_funcs];
-uarch_t __cxa_atexit_func_count = 0;
+static atexit_func_entry_t __cxa_atexit_funcs[atexit_max_funcs];
+static uarch_t __cxa_atexit_func_count = 0;
 
 int __cxa_atexit_cxx_impl(__cxa_at_exit_destructor_function_t destructor, void* arg, void* dso) {
+
+  // see: https://refspecs.linuxbase.org/LSB_5.0.0/LSB-Core-generic/LSB-Core-generic/baselib---cxa-atexit.html
+  // for the specs
+
   if (__cxa_atexit_func_count >= atexit_max_funcs) {
     return -1;
   }
 
-  if (dso != __dso_handle) {
+  if (dso != &__dso_handle) {
     __abort_message("Called '__cxa_atexit' with and invalid '__dso_handle': we only use static executables, so this "
                     "should always be the same: %p != %p",
-                    dso, __dso_handle);
+                    dso, &__dso_handle);
   }
 
   __cxa_atexit_funcs[__cxa_atexit_func_count] = atexit_func_entry_t{destructor, arg};
@@ -121,12 +125,38 @@ int __cxa_atexit(__cxa_at_exit_destructor_function_t destructor, void* arg, void
 void __cxa_finalize(void* f) { __cxa_finalize_cxx_impl(f); }
 }
 
+#endif
+
+// see: https://gcc.gnu.org/onlinedocs/gccint/Initialization.html
+// for more information on how gcc handles initialization
+
 void __cxa_uefi_init_libcxx() {
-  //TODO
+  // Not really used, as we use the C way of using .init_array and not .ctors
+}
+
+extern "C" {
+#include <Library/DebugLib.h>
 }
 
 void __cxa_uefi_deinit_libcxx() {
-  //TODO
+#ifndef LLIBCXXABI_USE___CXA_ATEXIT
+
+  // Not really used when:
+  // -fno-use-cxa-atexit is used:
+  // -> the C way of using .fini_array and not .dtors
+  // already clean this up
+#else
+
+  // we need to call the remaining destructors when:
+  // -fuse-cxa-atexit is used:
+  // -> using the __cxa_atexit methods defined above
+  // calls all the remaining destructors
+
+  DEBUG((DEBUG_ERROR, "__cxa_atexit_func_count: %d\n", __cxa_atexit_func_count));
+
+  __cxa_finalize(nullptr);
+
+#endif
 }
 
 int __cxa_uefi_entrypoint(IN int Argc, IN char** Argv) {

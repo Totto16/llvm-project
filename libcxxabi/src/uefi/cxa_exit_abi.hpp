@@ -2,7 +2,9 @@
 
 #pragma once
 
-#include <cstdint>
+#ifdef LLIBCXXABI_USE___CXA_ATEXIT
+
+#  include <cstdint>
 
 extern "C" {
 
@@ -25,3 +27,5 @@ struct atexit_func_entry_t {
   //NOTE: don't use the handle, as we don't need it
   // void* dso_handle;
 };
+
+#endif
