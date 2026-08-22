@@ -13,16 +13,210 @@
 // see https://wiki.osdev.org/C%2B%2B#GCC
 // for some reference, and some snippets I used, but modified heavily
 
-static atexit_func_entry_t __cxa_atexit_funcs[atexit_max_funcs];
-static uarch_t __cxa_atexit_func_count = 0;
+#  include <cstdlib>
+#  include <type_traits>
+#  include <utility>
+
+namespace CXA::helper {
+
+struct atexit_func_entry_t {
+  __cxa_at_exit_destructor_function_t __destructor;
+  void* __arg;
+  //NOTE: don't use the handle, as we don't need it
+  // void* dso_handle;
+};
+
+static_assert(std::is_trivially_destructible_v<atexit_func_entry_t>);
+
+struct CXAAtexitFunctions {
+private:
+  constexpr static size_t block_size = 32;
+  constexpr static size_t start_cap_mul = 8;
+  constexpr static size_t increase_multiplier = 4;
+
+public:
+  atexit_func_entry_t* m_funcs;
+  size_t m_size;
+  size_t m_capacity;
+
+  consteval CXAAtexitFunctions() : m_funcs{nullptr}, m_size{0}, m_capacity{0} {}
+
+  CXAAtexitFunctions(const CXAAtexitFunctions&) = delete;
+  CXAAtexitFunctions& operator=(const CXAAtexitFunctions&) = delete;
+
+  CXAAtexitFunctions(CXAAtexitFunctions&&) = delete;
+  CXAAtexitFunctions& operator=(CXAAtexitFunctions&&) = delete;
+
+  //TODO: make sure this is never called
+  constexpr ~CXAAtexitFunctions() = default;
+
+  [[nodiscard]] bool init() {
+    const size_t capacity = CXAAtexitFunctions::block_size * CXAAtexitFunctions::start_cap_mul;
+    atexit_func_entry_t* funcs = (atexit_func_entry_t*)malloc(sizeof(*funcs) * capacity);
+
+    if (funcs == nullptr) {
+      return false;
+    }
+
+    this->m_funcs = funcs;
+    this->m_size = 0;
+    this->m_capacity = capacity;
+    return true;
+  }
+
+  [[nodiscard]] bool __partial_capacity_resize() {
+    const size_t old_block_size =
+        (this->m_size / (CXAAtexitFunctions::block_size * CXAAtexitFunctions::increase_multiplier));
+    const size_t new_capacity =
+        (old_block_size + 1) * (CXAAtexitFunctions::block_size * CXAAtexitFunctions::increase_multiplier);
+    _LIBCXXABI_ASSERT(new_capacity > this->m_capacity, "New capacity has to be greater than the old one");
+
+    atexit_func_entry_t* new_funcs = (atexit_func_entry_t*)realloc(this->m_funcs, sizeof(*new_funcs) * new_capacity);
+
+    if (new_funcs == nullptr) {
+      return false;
+    }
+
+    this->m_funcs = new_funcs;
+    this->m_capacity = new_capacity;
+    return true;
+  }
+
+  [[nodiscard]] bool append(atexit_func_entry_t&& entry) {
+
+    if (this->m_size >= this->m_capacity) {
+
+      const size_t new_capacity =
+          this->m_capacity + (CXAAtexitFunctions::block_size * CXAAtexitFunctions::increase_multiplier);
+      _LIBCXXABI_ASSERT(new_capacity > this->m_capacity, "New capacity has to be greater than the old one");
+
+      atexit_func_entry_t* new_funcs = (atexit_func_entry_t*)realloc(this->m_funcs, sizeof(*new_funcs) * new_capacity);
+
+      if (new_funcs == nullptr) {
+        return false;
+      }
+
+      this->m_funcs = new_funcs;
+      this->m_capacity = new_capacity;
+    }
+
+    this->m_funcs[this->m_size] = std::move(entry);
+    ++(this->m_size);
+
+    return true;
+  }
+
+  void clear_all() {
+    for (size_t i = this->m_size; i != 0; --i) {
+      atexit_func_entry_t* const entry = &((this->m_funcs)[i - 1]);
+      if (entry->__destructor != nullptr) {
+        (*(entry->__destructor))(entry->__arg);
+      }
+
+      *entry = atexit_func_entry_t{nullptr, nullptr};
+    }
+    this->m_size = 0;
+
+    // reset the capacity, if possible
+    atexit_func_entry_t* old_funcs = this->m_funcs;
+    const size_t old_size = this->m_size;
+    const size_t old_capacity = this->m_capacity;
+    bool ok = this->init();
+
+    if (!ok) {
+      this->m_funcs = old_funcs;
+      this->m_size = old_size;
+      this->m_capacity = old_capacity;
+    } else {
+      free(old_funcs);
+    }
+  }
+
+  void clear_by(void* f) {
+    for (size_t i = this->m_size; i != 0; --i) {
+      atexit_func_entry_t* const entry = &((this->m_funcs)[i - 1]);
+
+      /*
+     * The ABI states that multiple calls to the __cxa_finalize(destructor_func_ptr) function
+     * should not destroy objects multiple times. Only one call is needed to eliminate multiple
+     * entries with the same address.
+     *
+     **/
+      if (entry->__destructor == f) {
+
+        //should be always proven, as we check for f == nullptr previously
+        _LIBCXXABI_ASSERT(entry->__destructor != nullptr,
+                          "UNREACHABLE: destructor equal to f (!= NULL) should never be NULL");
+
+        (*(entry->__destructor))(entry->__arg);
+
+        *entry = atexit_func_entry_t{nullptr, nullptr};
+      }
+    }
+
+    // clear the list of called functions, don't leaves holes, which is not even that complicated and can be accomplished in one iteration over the whole list
+
+    size_t current_idx = 0;
+    for (size_t i = 0; i < this->m_size; ++i) {
+      atexit_func_entry_t* const src_entry = &((this->m_funcs)[i]);
+
+      if (src_entry->__destructor != nullptr) {
+
+        if (i == current_idx) {
+          // no move needed
+        } else {
+          atexit_func_entry_t* const dest_entry = &((this->m_funcs)[current_idx]);
+
+          *dest_entry = *src_entry;
+          *src_entry = atexit_func_entry_t{nullptr, nullptr};
+        }
+
+        // one slot is filled, so we move the index
+        ++current_idx;
+      } else {
+        // do nothing, we don't need to move it, and we need to leave the current_idx as is
+      }
+    }
+    this->m_size = current_idx;
+
+    // reset the capacity, if possible, not reseting everything, as we have still some things left
+    atexit_func_entry_t* old_funcs = this->m_funcs;
+    const size_t old_size = this->m_size;
+    const size_t old_capacity = this->m_capacity;
+    bool ok = this->__partial_capacity_resize();
+
+    if (!ok) {
+      this->m_funcs = old_funcs;
+      this->m_size = old_size;
+      this->m_capacity = old_capacity;
+    } else {
+      free(old_funcs);
+    }
+  }
+
+  void deinit() {
+
+    free(this->m_funcs);
+
+    this->m_funcs = nullptr;
+    this->m_size = 0;
+    this->m_capacity = 0;
+  }
+};
+
+static_assert(std::is_trivially_destructible_v<CXAAtexitFunctions>);
+
+} // namespace CXA::helper
+
+constinit CXA::helper::CXAAtexitFunctions __cxa_atexit_funcs{};
 
 int __cxa_atexit_cxx_impl(__cxa_at_exit_destructor_function_t destructor, void* arg, void* dso) {
 
   // see: https://refspecs.linuxbase.org/LSB_5.0.0/LSB-Core-generic/LSB-Core-generic/baselib---cxa-atexit.html
   // for the specs
 
-  if (__cxa_atexit_func_count >= atexit_max_funcs) {
-    return -1;
+  if (__cxa_atexit_funcs.m_funcs == nullptr) {
+    __abort_message("Called '__cxa_atexit' before having initialized the state required by '__cxa_atexit'");
   }
 
   if (dso != &__dso_handle) {
@@ -31,9 +225,9 @@ int __cxa_atexit_cxx_impl(__cxa_at_exit_destructor_function_t destructor, void* 
                     dso, &__dso_handle);
   }
 
-  __cxa_atexit_funcs[__cxa_atexit_func_count] = atexit_func_entry_t{destructor, arg};
-
-  ++__cxa_atexit_func_count;
+  if (!__cxa_atexit_funcs.append(CXA::helper::atexit_func_entry_t{destructor, arg})) {
+    return -1;
+  }
 
   return 0;
 }
@@ -53,64 +247,11 @@ void __cxa_finalize_cxx_impl(void* f) {
      *
      */
 
-    for (uarch_t i = __cxa_atexit_func_count; i != 0; --i) {
-      atexit_func_entry_t* const entry = &__cxa_atexit_funcs[i - 1];
-      if (entry->__destructor != nullptr) {
-        (*(entry->__destructor))(entry->__arg);
-      }
-
-      *entry = atexit_func_entry_t{nullptr, nullptr};
-    }
-    __cxa_atexit_func_count = 0;
-
+    __cxa_atexit_funcs.clear_all();
     return;
   }
 
-  for (uarch_t i = __cxa_atexit_func_count; i != 0; --i) {
-    atexit_func_entry_t* const entry = &__cxa_atexit_funcs[i - 1];
-
-    /*
-     * The ABI states that multiple calls to the __cxa_finalize(destructor_func_ptr) function
-     * should not destroy objects multiple times. Only one call is needed to eliminate multiple
-     * entries with the same address.
-     *
-     **/
-    if (entry->__destructor == f) {
-
-      //should be always proven, as we check for f == nullptr previously
-      _LIBCXXABI_ASSERT(entry->__destructor != nullptr,
-                        "UNREACHABLE: destructor equal to f (!= NULL) should never be NULL");
-
-      (*(entry->__destructor))(entry->__arg);
-
-      *entry = atexit_func_entry_t{nullptr, nullptr};
-    }
-  }
-
-  // clear the list of called functions, don't leaves holes, which is not even that complicated and can be accomplished in one iteration over the whole list
-
-  uarch_t current_idx = 0;
-  for (uarch_t i = 0; i < __cxa_atexit_func_count; ++i) {
-    atexit_func_entry_t* const src_entry = &__cxa_atexit_funcs[i];
-
-    if (src_entry->__destructor != nullptr) {
-
-      if (i == current_idx) {
-        // no move needed
-      } else {
-        atexit_func_entry_t* const dest_entry = &__cxa_atexit_funcs[current_idx];
-
-        *dest_entry = *src_entry;
-        *src_entry = atexit_func_entry_t{nullptr, nullptr};
-      }
-
-      // one slot is filled, so we move the index
-      ++current_idx;
-    } else {
-      // do nothing, we don't need to move it, and we need to leave the current_idx as is
-    }
-  }
-  __cxa_atexit_func_count = current_idx;
+  __cxa_atexit_funcs.clear_by(f);
 }
 
 extern "C" {
@@ -132,10 +273,12 @@ void __cxa_finalize(void* f) { __cxa_finalize_cxx_impl(f); }
 
 void __cxa_uefi_init_libcxx() {
   // Not really used, as we use the C way of using .init_array and not .ctors
-}
 
-extern "C" {
-#include <Library/DebugLib.h>
+#ifdef LLIBCXXABI_USE___CXA_ATEXIT
+  // but we need to setup the __cxa_atexit state, if we use it
+
+  _LIBCXXABI_ASSERT(__cxa_atexit_funcs.init(), "Initializing of the state required by '__cxa_atexit' failed");
+#endif
 }
 
 void __cxa_uefi_deinit_libcxx() {
@@ -152,9 +295,9 @@ void __cxa_uefi_deinit_libcxx() {
   // -> using the __cxa_atexit methods defined above
   // calls all the remaining destructors
 
-  DEBUG((DEBUG_ERROR, "__cxa_atexit_func_count: %d\n", __cxa_atexit_func_count));
-
   __cxa_finalize(nullptr);
+  // deinitialize the __cxa_atexit state
+  __cxa_atexit_funcs.deinit();
 
 #endif
 }
@@ -168,6 +311,7 @@ int __cxa_uefi_entrypoint(IN int Argc, IN char** Argv) {
   // we do initialization of the standard library, call the c++ main and than deinitialization
   // we need to pay attention to also do the cleanup,w ehn calling exit(), so we need some edk2-libc functionality to accomplish that
 
+  //TODO: this needs to be called before init_array, as that might use cxa_atexit
   __cxa_uefi_init_libcxx();
   edk2_libcxx_set_destroy(__cxa_uefi_deinit_libcxx);
 
