@@ -210,7 +210,7 @@ static_assert(std::is_trivially_destructible_v<CXAAtexitFunctions>);
 
 constinit CXA::helper::CXAAtexitFunctions __cxa_atexit_funcs{};
 
-int __cxa_atexit_cxx_impl(__cxa_at_exit_destructor_function_t destructor, void* arg, void* dso) {
+static int __cxa_atexit_cxx_impl(__cxa_at_exit_destructor_function_t destructor, void* arg, void* dso) {
 
   // see: https://refspecs.linuxbase.org/LSB_5.0.0/LSB-Core-generic/LSB-Core-generic/baselib---cxa-atexit.html
   // for the specs
@@ -232,7 +232,7 @@ int __cxa_atexit_cxx_impl(__cxa_at_exit_destructor_function_t destructor, void* 
   return 0;
 }
 
-void __cxa_finalize_cxx_impl(void* f) {
+static void __cxa_finalize_cxx_impl(void* f) {
   // taken from https://wiki.osdev.org/C%2B%2B#GCC
   // but heavily modified
 
@@ -271,7 +271,7 @@ void __cxa_finalize(void* f) { __cxa_finalize_cxx_impl(f); }
 // see: https://gcc.gnu.org/onlinedocs/gccint/Initialization.html
 // for more information on how gcc handles initialization
 
-void __cxa_uefi_init_libcxx() {
+static void __cxa_uefi_init_libcxx() {
   // Not really used, as we use the C way of using .init_array and not .ctors
 
 #ifdef LLIBCXXABI_USE___CXA_ATEXIT
@@ -281,7 +281,7 @@ void __cxa_uefi_init_libcxx() {
 #endif
 }
 
-void __cxa_uefi_deinit_libcxx() {
+static void __cxa_uefi_deinit_libcxx() {
 #ifndef LLIBCXXABI_USE___CXA_ATEXIT
 
   // Not really used when:
@@ -302,24 +302,33 @@ void __cxa_uefi_deinit_libcxx() {
 #endif
 }
 
-int __cxa_uefi_entrypoint(IN int Argc, IN char** Argv) {
+extern "C" {
+
+void edk2_libcxx_init(void) { __cxa_uefi_init_libcxx(); }
+
+typedef void (*init_func_t)(void);
+
+init_func_t __libc_init_ref_edk2_libcxx_init
+    __attribute__((retain, used, section(".__libc_init.prio_80.libcxx_init"), aligned(sizeof(init_func_t)))) = edk2_libcxx_init;
+
+void edk2_libcxx_destroy(void) { __cxa_uefi_deinit_libcxx(); }
+
+init_func_t __libc_init_ref_edk2_libcxx_destroy
+    __attribute__((retain, used, section(".__libc_fini.prio_80.libcxx_destroy"), aligned(sizeof(init_func_t)))) = edk2_libcxx_destroy;
+}
+
+static int __cxa_uefi_entrypoint(IN int Argc, IN char** Argv) {
 
   // this is called from the edk2-libc, so the c standard library is already initialized
 
   //TODO: C constructors (in .init_array) are already initialized, what is with c++ global / static constructors?
 
   // we do initialization of the standard library, call the c++ main and than deinitialization
-  // we need to pay attention to also do the cleanup,w ehn calling exit(), so we need some edk2-libc functionality to accomplish that
+  // we need to pay attention to also do the cleanup,when calling exit(), so we need some edk2-libc functionality to accomplish that
 
   //TODO: this needs to be called before init_array, as that might use cxa_atexit
-  __cxa_uefi_init_libcxx();
-  edk2_libcxx_set_destroy(__cxa_uefi_deinit_libcxx);
 
   int result = EDK2_LIBCXX_ENTRY_NAME(Argc, Argv);
-
-  edk2_libcxx_set_destroy(nullptr);
-  __cxa_uefi_deinit_libcxx();
-
   return result;
 }
 
