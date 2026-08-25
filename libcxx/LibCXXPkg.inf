@@ -63,6 +63,7 @@
   src/thread.cpp
   src/future.cpp
   src/condition_variable.cpp
+  src/condition_variable_destructor.cpp
 
 [Packages]
   MdePkg/MdePkg.dec
