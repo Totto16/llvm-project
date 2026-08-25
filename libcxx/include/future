@@ -435,7 +435,7 @@ struct is_error_code_enum<future_errc::__lx> : public true_type {};
 #    endif
 
 // enum class launch
-_LIBCPP_DECLARE_STRONG_ENUM(launch){async = 1, deferred = 2, any = async | deferred};
+_LIBCPP_DECLARE_STRONG_ENUM(launch){async = 1, deferred = 2, uefi_event = 4, any = async | deferred};
 _LIBCPP_DECLARE_STRONG_ENUM_EPILOG(launch)
 
 #    ifndef _LIBCPP_CXX03_LANG
@@ -899,6 +899,79 @@ void __async_assoc_state<void, _Fp>::__on_zero_shared() _NOEXCEPT {
   base::__on_zero_shared();
 }
 
+template <class _Rp, class _Fp>
+class __uefi_event_assoc_state : public __assoc_state<_Rp> {
+  typedef __assoc_state<_Rp> base;
+
+  _Fp __func_;
+
+  _LIBCPP_HIDE_FROM_ABI_VIRTUAL virtual void __on_zero_shared() _NOEXCEPT;
+
+public:
+  _LIBCPP_HIDE_FROM_ABI explicit __uefi_event_assoc_state(_Fp&& __f);
+
+  _LIBCPP_HIDE_FROM_ABI_VIRTUAL virtual void __execute();
+};
+
+template <class _Rp, class _Fp>
+inline __uefi_event_assoc_state<_Rp, _Fp>::__uefi_event_assoc_state(_Fp&& __f) : __func_(std::forward<_Fp>(__f)) {}
+
+template <class _Rp, class _Fp>
+void __uefi_event_assoc_state<_Rp, _Fp>::__execute() {
+#    if _LIBCPP_HAS_EXCEPTIONS
+  try {
+#    endif // _LIBCPP_HAS_EXCEPTIONS
+    this->set_value(__func_());
+#    if _LIBCPP_HAS_EXCEPTIONS
+  } catch (...) {
+    this->set_exception(current_exception());
+  }
+#    endif // _LIBCPP_HAS_EXCEPTIONS
+}
+
+template <class _Rp, class _Fp>
+void __uefi_event_assoc_state<_Rp, _Fp>::__on_zero_shared() _NOEXCEPT {
+  this->wait();
+  base::__on_zero_shared();
+}
+
+template <class _Fp>
+class __uefi_event_assoc_state<void, _Fp> : public __assoc_sub_state {
+  typedef __assoc_sub_state base;
+
+  _Fp __func_;
+
+  _LIBCPP_HIDE_FROM_ABI_VIRTUAL void __on_zero_shared() _NOEXCEPT override;
+
+public:
+  _LIBCPP_HIDE_FROM_ABI explicit __uefi_event_assoc_state(_Fp&& __f);
+
+  _LIBCPP_HIDE_FROM_ABI_VIRTUAL void __execute() override;
+};
+
+template <class _Fp>
+inline __uefi_event_assoc_state<void, _Fp>::__uefi_event_assoc_state(_Fp&& __f) : __func_(std::forward<_Fp>(__f)) {}
+
+template <class _Fp>
+void __uefi_event_assoc_state<void, _Fp>::__execute() {
+#    if _LIBCPP_HAS_EXCEPTIONS
+  try {
+#    endif // _LIBCPP_HAS_EXCEPTIONS
+    __func_();
+    this->set_value();
+#    if _LIBCPP_HAS_EXCEPTIONS
+  } catch (...) {
+    this->set_exception(current_exception());
+  }
+#    endif // _LIBCPP_HAS_EXCEPTIONS
+}
+
+template <class _Fp>
+void __uefi_event_assoc_state<void, _Fp>::__on_zero_shared() _NOEXCEPT {
+  this->wait();
+  base::__on_zero_shared();
+}
+
 template <class _Rp>
 class promise;
 template <class _Rp>
@@ -915,6 +988,9 @@ _LIBCPP_HIDE_FROM_ABI future<_Rp> __make_deferred_assoc_state(_Fp&& __f);
 template <class _Rp, class _Fp>
 _LIBCPP_HIDE_FROM_ABI future<_Rp> __make_async_assoc_state(_Fp&& __f);
 
+template <class _Rp, class _Fp>
+_LIBCPP_HIDE_FROM_ABI future<_Rp> __make_uefi_event_assoc_state(_Fp&& __f);
+
 template <class _Rp>
 class future {
   __assoc_state<_Rp>* __state_;
@@ -930,6 +1006,8 @@ class future {
   friend future<_R1> __make_deferred_assoc_state(_Fp&& __f);
   template <class _R1, class _Fp>
   friend future<_R1> __make_async_assoc_state(_Fp&& __f);
+  template <class _R1, class _Fp>
+  friend future<_R1> __make_uefi_event_assoc_state(_Fp&& __f);
 
 public:
   _LIBCPP_HIDE_FROM_ABI future() _NOEXCEPT : __state_(nullptr) {}
@@ -1001,6 +1079,8 @@ class future<_Rp&> {
   friend future<_R1> __make_deferred_assoc_state(_Fp&& __f);
   template <class _R1, class _Fp>
   friend future<_R1> __make_async_assoc_state(_Fp&& __f);
+  template <class _R1, class _Fp>
+  friend future<_R1> __make_uefi_event_assoc_state(_Fp&& __f);
 
 public:
   _LIBCPP_HIDE_FROM_ABI future() _NOEXCEPT : __state_(nullptr) {}
@@ -1068,6 +1148,8 @@ class _LIBCPP_EXPORTED_FROM_ABI future<void> {
   friend future<_R1> __make_deferred_assoc_state(_Fp&& __f);
   template <class _R1, class _Fp>
   friend future<_R1> __make_async_assoc_state(_Fp&& __f);
+  template <class _R1, class _Fp>
+  friend future<_R1> __make_uefi_event_assoc_state(_Fp&& __f);
 
 public:
   _LIBCPP_HIDE_FROM_ABI future() _NOEXCEPT : __state_(nullptr) {}
@@ -1820,6 +1902,61 @@ _LIBCPP_HIDE_FROM_ABI future<_Rp> __make_async_assoc_state(_Fp&& __f) {
   return future<_Rp>(__h.get());
 }
 
+//TODO START
+using UefiTaskFn = void (*)(void*);
+
+struct UefiTask {
+    UefiTaskFn Fn;
+    void*      Context;
+    EFI_EVENT  Event;
+};
+
+EFI_STATUS
+UefiSubmit(UefiTaskFn Fn, void* Context)
+{
+    auto* Task = new UefiTask{
+        Fn,
+        Context,
+        nullptr
+    };
+
+    EFI_STATUS Status = gBS->CreateEvent(
+        EVT_NOTIFY_SIGNAL,
+        TPL_CALLBACK,
+        [](EFI_EVENT Event, void* Context) {
+            auto* Task = static_cast<UefiTask*>(Context);
+
+            Task->Fn(Task->Context);
+
+            gBS->CloseEvent(Event);
+            delete Task;
+        },
+        Task,
+        &Task->Event
+    );
+
+    if (EFI_ERROR(Status)) {
+        delete Task;
+        return Status;
+    }
+
+    return gBS->SignalEvent(Task->Event);
+}
+
+//TODO END
+
+template <class _Rp, class _Fp>
+_LIBCPP_HIDE_FROM_ABI future<_Rp> __make_uefi_event_assoc_state(_Fp&& __f) {
+  unique_ptr<__uefi_event_assoc_state<_Rp, _Fp>, __release_shared_count> __h(
+      new __uefi_event_assoc_state<_Rp, _Fp>(std::forward<_Fp>(__f)));
+  auto __guard = std::__make_exception_guard([&] { __h->__make_ready(); });
+
+  UefiSubmit([](void* context) { static_cast<__uefi_event_assoc_state<_Rp, _Fp>*>(context)->__execute(); }, __h.get());
+
+  __guard.__complete();
+  return future<_Rp>(__h.get());
+}
+
 #    ifndef _LIBCPP_CXX03_LANG
 
 template <class _Fp, class... _Args>
@@ -1855,6 +1992,9 @@ async(launch __policy, _Fp&& __f, _Args&&... __args) {
 
   typedef __async_func<__decay_t<_Fp>, __decay_t<_Args>...> _BF;
   typedef typename _BF::_Rp _Rp;
+
+  if (__does_policy_contain(__policy, launch::uefi_event))
+    return std::__make_uefi_event_assoc_state<_Rp>(_BF(std::forward<_Fp>(__f), std::forward<_Args>(__args)...));
 
 #      if _LIBCPP_HAS_EXCEPTIONS
   try {
