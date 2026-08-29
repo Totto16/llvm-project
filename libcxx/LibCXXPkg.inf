@@ -54,6 +54,7 @@
 
   src/__support/uefi/ctype.c
   src/__support/uefi/locale_t.c
+  src/__support/uefi/compat/math/round.c
 
   src/support/uefi/mbsnrtowcs.cpp
   src/support/uefi/wcsnrtombs.cpp
