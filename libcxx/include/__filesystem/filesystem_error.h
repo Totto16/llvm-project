@@ -75,8 +75,9 @@ template <class... _Args>
 }
 #  else
 template <class... _Args>
-[[__noreturn__]] inline _LIBCPP_HIDE_FROM_ABI void __throw_filesystem_error(_Args&&...) {
-  _LIBCPP_VERBOSE_ABORT("filesystem_error was thrown in -fno-exceptions mode");
+[[__noreturn__]] inline _LIBCPP_HIDE_FROM_ABI void __throw_filesystem_error(_Args&&... __args) {
+  auto err = filesystem_error(std::forward<_Args>(__args)...);
+  _LIBCPP_VERBOSE_ABORT("filesystem_error was thrown in -fno-exceptions mode: %s", err.what());
 }
 #  endif
 
